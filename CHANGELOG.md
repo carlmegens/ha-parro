@@ -1,5 +1,11 @@
 # Wijzigingen
 
+## 0.4.3 — Agenda-tab in het Parro-scherm
+
+- Voegt Agenda toe naast Mededelingen en Gesprekken, met de bestaande lijst van komende schoolafspraken, vernieuwen en een link naar de volledige agenda.
+- Koppelt de lijst aan de schoolagenda van het gekozen account, onafhankelijk van toegang tot mededelingen en gesprekken; de normale Home Assistant-agendarechten blijven gelden.
+- Wist geladen en nog onderweg zijnde inhoud bij wisselen van account, tab of gebruiker en bij sluiten; volgt hernoemde of verwijderde kalenderentiteiten.
+
 ## 0.4.2 — komende afspraken in de apparaatpop-up
 
 - Hernoemt de GitHub-repository naar `carlmegens/ha-parro` op verzoek van de catalogusreview. De integratienaam en entiteit-ID’s blijven gelijk; bestaande GitHub-links worden doorgestuurd.

@@ -38,6 +38,10 @@ window.fixture = {
     {summary:'Studiedag',start:{date:new Date(Date.now()+14*86400000).toISOString().slice(0,10)},end:{date:new Date(Date.now()+15*86400000).toISOString().slice(0,10)}},
     {summary:'Winterfeest',location:'Aula',start:{dateTime:new Date(Date.now()+28*86400000).toISOString()},end:{dateTime:new Date(Date.now()+28*86400000+3600000).toISOString()}},
   ],
+  calendarStates: {
+    'calendar.synthetic_school': {attributes:{parro_config_entry_id:'example-account',friendly_name:'Voorbeeldschool'}},
+    'calendar.second_school': {attributes:{parro_config_entry_id:'second-account',friendly_name:'Tweede school'}},
+  },
   apiCalls:[], items, calls:[], photoCalls:[], revoked:[], state:params.get('state')||'ready', deferred:[], userId:'synthetic-user', imageStatus:200,
   pendingTypes:[],
   conversations:[{id:'101',title:'Contact met het voorbeeldteam',type:'private',sort_date:'2026-09-08T09:30:00+02:00',unread_count:2},{id:'202',title:'Bibliotheekbezoek',type:'group',sort_date:'2026-09-07T13:00:00+02:00',unread_count:0}],
@@ -51,6 +55,7 @@ window.fixture = {
 };
 const originalRevoke=URL.revokeObjectURL.bind(URL);URL.revokeObjectURL=(url)=>{fixture.revoked.push(url);originalRevoke(url);};
 window.makeHass = (userId=fixture.userId) => ({
+  states:fixture.calendarStates,
   devices:{'synthetic-device':{id:'synthetic-device',config_entries:['example-account']}},
   config:{time_zone:'Europe/Amsterdam'},user:{id:userId},locale:{language:params.get('lang')||'nl'},
   async callApi(method, path) {

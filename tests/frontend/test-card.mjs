@@ -255,10 +255,59 @@ try {
   await page.waitForFunction(()=>card._events.length===3);
   await page.evaluate(()=>card.remove());assert.equal(await page.evaluate(()=>card._events.length),0);
  });
+ await test('panel agenda is lazy, account-bound and keyboard accessible',async()=>{
+  await ready('?surface=panel');assert.equal(await page.evaluate(()=>fixture.apiCalls.length),0);
+  await page.locator('#tab-messages').click();await page.keyboard.press('ArrowRight');
+  await page.waitForFunction(()=>surface._calendar._events.length===3);
+  assert.equal(await page.locator('#tab-calendar').getAttribute('aria-selected'),'true');
+  assert.equal(await page.locator('#parro-content').getAttribute('aria-labelledby'),'tab-calendar');
+  assert.equal(await page.locator('parro-panel >> more-info-parro-calendar >> article').count(),3);
+  assert.match(await page.evaluate(()=>fixture.apiCalls[0].path),/^calendars\/calendar.synthetic_school\?/);
+  assert.equal(await count('article'),0);
+  const before=await page.evaluate(()=>fixture.apiCalls.length);
+  await page.evaluate(()=>{for(let i=0;i<20;i++)surface.hass=makeHass();});
+  assert.equal(await page.evaluate(()=>fixture.apiCalls.length),before);
+  await page.keyboard.press('Home');assert.equal(await page.locator('#tab-announcements').getAttribute('aria-selected'),'true');
+  assert.equal(await page.evaluate(()=>surface._calendar._events.length),0);
+  await page.waitForFunction(()=>card._data?.items.length===3);
+ });
+ await test('agenda direct route uses calendar permissions independently of message access',async()=>{
+  await page.goto(base+'?surface=panel&source=calendar');
+  await page.waitForFunction(()=>surface._calendar._events.length===3);
+  assert.equal(await page.evaluate(()=>fixture.calls.length),0);
+  await page.evaluate(()=>{fixture.chatAllowed=false;surface.route={path:'/?source=calendar'};});
+  await page.locator('#panel-account').selectOption('second-account');
+  await page.waitForFunction(()=>surface._calendar._events.length===3);
+  assert.match(await page.evaluate(()=>fixture.apiCalls.at(-1).path),/^calendars\/calendar.second_school\?/);
+  assert.equal(await page.evaluate(()=>fixture.calls.length),0);
+  await page.evaluate(()=>{fixture.state='unauthorized';surface._calendar._load();});
+  await page.waitForFunction(()=>surface._calendar._error==='calendarError');
+  assert.equal(await page.locator('more-info-parro-calendar >> article').count(),0);
+ });
+ await test('agenda discards pending results after account/tab/user changes and calendar removal',async()=>{
+  await page.goto(base+'?surface=panel&source=calendar&state=loading');
+  await page.waitForFunction(()=>fixture.deferred.length===1);
+  await page.locator('#tab-announcements').click();
+  await page.evaluate(()=>fixture.deferred[0].resolve(fixture.calendarEvents));
+  assert.equal(await page.evaluate(()=>surface._calendar._events.length),0);
+  await page.evaluate(()=>{fixture.state='ready';surface.route={path:'/second-account?source=calendar'};});
+  await page.waitForFunction(()=>surface._calendar._events.length===3);
+  assert.match(await page.evaluate(()=>fixture.apiCalls.at(-1).path),/^calendars\/calendar.second_school\?/);
+  await page.evaluate(()=>{fixture.state='loading';surface._calendar._load();});
+  await page.evaluate(()=>{fixture.calendarStates={};surface.hass=makeHass('other-user');fixture.deferred.at(-1).resolve(fixture.calendarEvents);});
+  await page.waitForFunction(()=>surface._calendar._error==='calendarMissing');
+  assert.equal(await page.locator('more-info-parro-calendar >> article').count(),0);
+  await page.evaluate(()=>{fixture.state='ready';fixture.calendarStates={'calendar.renamed':{attributes:{parro_config_entry_id:'second-account'}}};surface.hass=makeHass('other-user');});
+  await page.waitForFunction(()=>surface._calendar._events.length===3);
+  assert.match(await page.evaluate(()=>fixture.apiCalls.at(-1).path),/^calendars\/calendar.renamed\?/);
+  await page.evaluate(()=>surface.remove());assert.equal(await page.evaluate(()=>surface._calendar._events.length),0);
+ });
  if(!process.env.PARRO_SKIP_SCREENSHOTS) {
  // One batched visual inspection: desktop/light + mobile/dark + editor + loading/error.
  const artifacts=new URL('./artifacts/',import.meta.url);await mkdir(artifacts,{recursive:true});
  for(const shot of [
+  {name:'agenda-panel-desktop',width:1100,height:950,query:'?surface=panel&source=calendar'},
+  {name:'agenda-panel-mobile',width:390,height:850,query:'?surface=panel&source=calendar&theme=dark'},
   {name:'calendar-desktop',width:700,height:850,query:'?surface=calendar'},
   {name:'calendar-mobile',width:390,height:850,query:'?surface=calendar&theme=dark'},
   {name:'desktop-light',width:1100,height:1050,query:''},
@@ -272,7 +321,8 @@ try {
   {name:'error',width:390,height:700,query:'?state=authentication_expired&lang=en'},
  ]) {
   await page.setViewportSize({width:shot.width,height:shot.height});await page.goto(base+shot.query);
-  if(shot.name!=='loading')await page.waitForFunction(()=>card._started&&!card._loading);
+  if(shot.name.startsWith('agenda-panel'))await page.waitForFunction(()=>surface._calendar._started&&!surface._calendar._loading);
+  else if(shot.name!=='loading')await page.waitForFunction(()=>card._started&&!card._loading);
   if(shot.selectRoom){await page.locator('parro-card >> #conversation').selectOption(shot.selectRoom);await page.waitForFunction(()=>card._data?.items.length>0);}
   await page.waitForTimeout(100);await page.screenshot({path:new URL(shot.name+'.png',artifacts).pathname,fullPage:true});
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`No horizontal overflow: ${shot.name}`);

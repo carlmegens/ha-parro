@@ -201,6 +201,7 @@ async def test_native_calendar_service_device_and_auth_failure(
         state = hass.states.get(entity_id)
         assert state.state == "off"
         assert state.attributes["message"] == "School holiday"
+        assert state.attributes["parro_config_entry_id"] == config_entry.entry_id
         assert URL not in str(state.as_dict())
         assert registry.async_get(entity_id).device_id
         response = await hass.services.async_call(

@@ -4,7 +4,7 @@ Schoolmededelingen, gesprekken en beschikbare foto's openen vanuit je Parro-appa
 
 [![Open Parro in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=carlmegens&repository=ha-parro&category=integration)
 
-**Versie 0.4.2 toont komende schoolafspraken direct in de apparaatpop-up.** Schoolafspraken verschijnen automatisch in de gewone Home Assistant-agenda en zijn bruikbaar op eigen dashboards en in automatiseringen.
+**Versie 0.4.3 voegt een tab Agenda toe aan het Parro-scherm, naast Mededelingen en Gesprekken.** Schoolafspraken verschijnen automatisch in de gewone Home Assistant-agenda en zijn bruikbaar op eigen dashboards en in automatiseringen.
 
 ## Installeren via Marketplace of HACS
 
@@ -29,6 +29,8 @@ De twee bestaande tellers blijven gewone tellers. De pop-up haalt de inhoud afzo
 De apparaatpagina biedt ook een knop om de gekoppelde Parro-weergave te openen. Die opent het meegeleverde Parro-scherm binnen Home Assistant, zonder een apart dashboard aan te maken. De normale **Configureren**-opties blijven beschikbaar. Een browserherlaadactie na installeren of bijwerken zorgt dat de nieuwe pop-upcode is geladen.
 
 ## Schoolagenda
+
+Open de tab **Agenda** in het Parro-scherm voor een chronologische lijst van maximaal 20 komende of lopende afspraken binnen 365 dagen. De lijst gebruikt de schoolagenda van het gekozen account en toont datum, tijd, locatie en hele dagen. Vernieuw handmatig of open de volledige Home Assistant-agenda vanuit de lijst. Zonder gekoppelde schoolagenda verschijnt een duidelijke melding.
 
 Op de apparaatpagina staat **Volgende schoolafspraak**, met de datum en tijd van de eerstvolgende afspraak die nog moet beginnen. Klik voor een chronologische lijst van maximaal 20 komende of nog lopende afspraken binnen 365 dagen, inclusief titel, datum, begin- en eindtijd, locatie en hele dagen. Vanuit de pop-up kun je de volledige Agenda openen. De lijst vernieuwt elke vijf minuten zolang de pop-up zichtbaar is, of met de vernieuwknop. Na een update kan eenmaal herladen van de browser nodig zijn. De datum wordt in de tijdzone van Home Assistant weergegeven. Als binnen de komende 365 dagen geen volgende afspraak bekend is, heeft deze datumsensor geen waarde; Home Assistant toont dan **Onbekend**. Bij een ophaalfout staat hij op **Niet beschikbaar**. Een begonnen afspraak schuift binnen een minuut door naar de volgende, zonder extra downloads.
 
@@ -77,13 +79,13 @@ Bij dashboardresources die Home Assistant via de interface beheert, registreert 
 
 Controleer zo nodig onder **Instellingen → Dashboards → menu → Resources / Bronnen** of deze resource eenmaal aanwezig is:
 
-- URL: `/parro_static/parro-card.js?v=0.4.2`
+- URL: `/parro_static/parro-card.js?v=0.4.3`
 - Type: **JavaScript-module**
 
 Beheer je dashboardresources in YAML, voeg dan dit item toe aan de bestaande lijst met resources:
 
 ```yaml
-- url: /parro_static/parro-card.js?v=0.4.2
+- url: /parro_static/parro-card.js?v=0.4.3
   type: module
 ```
 

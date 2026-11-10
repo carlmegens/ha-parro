@@ -1,7 +1,7 @@
-/* Parro card 0.4.2 — content stays in this card's memory, never in entity states. */
+/* Parro card 0.4.3 — content stays in this card's memory, never in entity states. */
 const STRINGS = {
   nl: {
-    appointments: 'Komende schoolafspraken', calendarRange: 'Maximaal 20 afspraken · komende 365 dagen',
+    agenda: 'Agenda', appointments: 'Komende schoolafspraken', calendarRange: 'Maximaal 20 afspraken · komende 365 dagen',
     calendarLoading: 'Schoolafspraken ophalen…', calendarEmpty: 'Geen komende schoolafspraken',
     calendarError: 'Schoolafspraken konden niet worden opgehaald.', calendarMissing: 'De schoolagenda is nog niet beschikbaar.',
     openCalendar: 'Open volledige agenda', allDay: 'Hele dag', appointment: 'Schoolafspraak', ongoing: 'Nu bezig',
@@ -28,7 +28,7 @@ const STRINGS = {
     untitled: 'Mededeling', retry: 'Opnieuw proberen', noGroups: 'Groepen ophalen…',
   },
   en: {
-    appointments: 'Upcoming school events', calendarRange: 'Up to 20 events · next 365 days',
+    agenda: 'Calendar', appointments: 'Upcoming school events', calendarRange: 'Up to 20 events · next 365 days',
     calendarLoading: 'Loading school events…', calendarEmpty: 'No upcoming school events',
     calendarError: 'Could not load school events.', calendarMissing: 'The school calendar is not available yet.',
     openCalendar: 'Open full calendar', allDay: 'All day', appointment: 'School event', ongoing: 'Happening now',
@@ -581,6 +581,7 @@ const SURFACE_CSS = `${CSS}
   .tab { flex:1; min-height:48px; border:0; border-bottom:2px solid transparent; padding:12px; background:transparent; color:var(--secondary-text-color,#606060); font-weight:500; }
   .tab[aria-selected=true] { border-bottom-color:var(--primary-color,#03a9f4); color:var(--primary-text-color,#212121); }
   .tab:hover { background:var(--secondary-background-color,#f5f5f5); }
+  .agenda-card { display:block; border-radius:12px; background:var(--ha-card-background,var(--card-background-color,white)); box-shadow:var(--ha-card-box-shadow,0 2px 6px #0002); overflow:hidden; }
   .panel-account { display:grid; gap:6px; margin-bottom:20px; }
   @media(max-width:600px) { .panel-content { padding:12px 12px 24px; } }
 `;
@@ -726,7 +727,7 @@ class ParroPanel extends HTMLElement {
   set route(value) {
     this._route = value;
     const query = new URLSearchParams(String(value?.path || '').split('?')[1] || window.location.search);
-    if (['messages', 'announcements'].includes(query.get('source'))) this._source = query.get('source');
+    if (['messages', 'announcements', 'calendar'].includes(query.get('source'))) this._source = query.get('source');
     this._sync();
   }
   set panel(value) { this._panel = value; this._sync(); }
@@ -746,21 +747,45 @@ class ParroPanel extends HTMLElement {
       const style = el('style'); style.textContent = SURFACE_CSS;
       const shell = el('div', 'panel-shell'); this._toolbar = el('div', 'panel-toolbar');
       const main = el('main', 'panel-content'); this._controls = el('div');
-      this._card = el('parro-card'); this._card.id = 'parro-content'; this._card.setAttribute('role', 'tabpanel');
-      main.append(this._controls, this._card); shell.append(this._toolbar, main); this.shadowRoot.replaceChildren(style, shell);
+      this._card = el('parro-card');
+      this._content = el('div'); this._content.id = 'parro-content'; this._content.setAttribute('role', 'tabpanel');
+      this._calendar = el('more-info-parro-calendar'); this._calendar.className = 'agenda-card';
+      main.append(this._controls, this._content); shell.append(this._toolbar, main); this.shadowRoot.replaceChildren(style, shell);
     }
     if (context !== this._context) {
       this._epoch++; this._context = context; this._accounts = []; this._account = routeAccount;
       this._renderControls();
       if (!routeAccount && this._hass) this._loadAccounts();
     }
+    if (this._source === 'calendar' && !routeAccount) this._loadCalendarAccounts();
     this._syncCard();
   }
+  _calendars() {
+    return Object.entries(this._hass?.states || {}).filter(([id, state]) => /^calendar\.[a-z0-9_]+$/.test(id) && /^[A-Za-z0-9_-]{1,128}$/.test(state.attributes?.parro_config_entry_id || ''));
+  }
+  _loadCalendarAccounts() {
+    const accounts = this._calendars().map(([, state]) => ({ config_entry_id: state.attributes.parro_config_entry_id, title: state.attributes.friendly_name || 'Parro' }));
+    const signature = JSON.stringify(accounts);
+    if (signature !== JSON.stringify(this._accounts)) { this._accounts = accounts; this._renderControls(); }
+  }
   _syncCard() {
+    if (this._source === 'calendar') {
+      this._card.remove();
+      const entityId = this._calendars().find(([, state]) => state.attributes.parro_config_entry_id === this._account)?.[0] || '';
+      const context = JSON.stringify([this._account, entityId, this._hass?.user?.id]);
+      if (context !== this._calendarContext) { this._calendar.remove(); this._calendarContext = context; }
+      this._calendar.stateObj = { attributes: { parro_calendar_entity_id: entityId } };
+      this._calendar.hass = this._hass;
+      if (!this._calendar.isConnected) this._content.replaceChildren(this._calendar);
+      return;
+    }
+    this._calendar.remove(); this._calendarContext = '';
     this._card.setConfig({ type: 'custom:parro-card', config_entry_id: this._account, source: this._source, limit: 20, show_images: true });
     this._card.hass = this._hass;
+    if (!this._card.isConnected) this._content.replaceChildren(this._card);
   }
   async _loadAccounts() {
+    if (this._source === 'calendar') { this._accountError = null; this._loadCalendarAccounts(); return; }
     const epoch = ++this._epoch; this._accountError = null;
     try {
       const result = await this._hass.callWS({ type: 'parro/accounts', ...(this._source === 'messages' ? { source: 'messages' } : {}) });
@@ -776,12 +801,13 @@ class ParroPanel extends HTMLElement {
     back.className = 'icon-button'; back.setAttribute('aria-label', device ? t.backDevice : t.backIntegration); back.title = back.getAttribute('aria-label'); back.replaceChildren(icon('arrow-left'));
     this._toolbar.replaceChildren(back, el('h1', '', 'Parro'));
     const tabs = el('div', 'tabs'); tabs.setAttribute('role', 'tablist'); tabs.setAttribute('aria-label', t.source);
-    for (const [source, label] of [['announcements', t.announcements], ['messages', t.conversations]]) {
+    const sources = ['announcements', 'messages', 'calendar'];
+    for (const [source, label] of [['announcements', t.announcements], ['messages', t.conversations], ['calendar', t.agenda]]) {
       const tab = button(label, () => { this._source = source; this._sync(); this.shadowRoot.querySelector(`#tab-${source}`)?.focus(); }, 'tab');
       tab.textContent = label; tab.id = `tab-${source}`; tab.setAttribute('role', 'tab'); tab.setAttribute('aria-selected', String(source === this._source)); tab.setAttribute('aria-controls', 'parro-content'); tab.tabIndex = source === this._source ? 0 : -1;
-      tab.addEventListener('keydown', (event) => { if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) { event.preventDefault(); this._source = event.key === 'Home' ? 'announcements' : event.key === 'End' ? 'messages' : source === 'messages' ? 'announcements' : 'messages'; this._sync(); this.shadowRoot.querySelector(`#tab-${this._source}`)?.focus(); } }); tabs.append(tab);
+      tab.addEventListener('keydown', (event) => { if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) { event.preventDefault(); this._source = event.key === 'Home' ? 'announcements' : event.key === 'End' ? 'calendar' : sources[(sources.indexOf(source) + (event.key === 'ArrowRight' ? 1 : sources.length - 1)) % sources.length]; this._sync(); this.shadowRoot.querySelector(`#tab-${this._source}`)?.focus(); } }); tabs.append(tab);
     }
-    this._card.setAttribute('aria-labelledby', `tab-${this._source}`);
+    this._content.setAttribute('aria-labelledby', `tab-${this._source}`);
     this._controls.replaceChildren(tabs);
     if (!this._routeAccount()) {
       const field = el('div', 'panel-account'); const label = el('label', '', t.account); label.htmlFor = 'panel-account';

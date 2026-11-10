@@ -27,6 +27,7 @@ class ParroCalendar(ParroEntity, CalendarEntity):
     def __init__(self, coordinator, entry):
         super().__init__(coordinator, entry, "school_calendar")
         self._entry = entry
+        self._attr_extra_state_attributes = {"parro_config_entry_id": entry.entry_id}
         self._events: list[CalendarEvent] = []
         self._calendar_available = False
 
