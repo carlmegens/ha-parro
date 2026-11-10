@@ -184,10 +184,83 @@ try {
   await ready('?source=messages');await page.locator('parro-card >> #conversation').selectOption('101');await page.waitForFunction(()=>card._data?.items.length===2);
   await page.evaluate(()=>card.hass=makeHass('another-user'));await page.waitForFunction(()=>card._error==='chooseConversation');assert.equal(await count('article'),0);
  });
+ await test('calendar popup uses the native authenticated calendar endpoint and handles state updates',async()=>{
+  await ready('?surface=calendar');
+  assert.equal(await page.locator('more-info-parro-calendar >> article').count(),3);
+  assert.match(await page.locator('more-info-parro-calendar >> h2').innerText(),/Komende schoolafspraken/);
+  assert.match(await page.locator('more-info-parro-calendar >> .calendar-list').innerText(),/Hele dag/);
+  assert.equal(await page.locator('more-info-parro-calendar >> a').getAttribute('href'),'/calendar');
+  const refresh=page.getByRole('button',{name:'Vernieuwen'});await refresh.focus();await page.keyboard.press('Enter');
+  await page.waitForFunction(()=>!card._loading);
+  assert.equal(await refresh.evaluate(el=>el.getRootNode().activeElement===el),true);
+  const calls=await page.evaluate(()=>fixture.apiCalls);
+  assert.equal(calls.length,2);assert.equal(calls[0].method,'GET');
+  const url=new URL(calls[0].path,'http://synthetic/');assert.equal(url.pathname,'/calendars/calendar.synthetic_school');
+  assert.equal(Date.parse(url.searchParams.get('end'))-Date.parse(url.searchParams.get('start')),365*86400000);
+  await page.evaluate(()=>{for(let i=0;i<100;i++)card.hass=makeHass();});
+  assert.equal(await page.evaluate(()=>fixture.apiCalls.length),2);
+ });
+ await test('calendar orders, bounds, and safely displays upcoming events',async()=>{
+  await page.evaluate(async()=>{
+   const at=(days)=>new Date(Date.now()+days*86400000).toISOString();
+   fixture.calendarEvents=[{summary:'PAST',start:{dateTime:at(-2)},end:{dateTime:at(-1)}},
+    ...Array.from({length:30},(_,i)=>({summary:'Event '+i,start:{dateTime:at(i+1)},end:{dateTime:at(i+1.1)}})).reverse()];
+   fixture.calendarEvents[30].summary='<img src=x onerror="window.__calendarXss=1">';
+   await card._load();
+  });
+  assert.equal(await page.locator('more-info-parro-calendar >> article').count(),20);
+  assert.equal(await page.locator('more-info-parro-calendar >> img').count(),0);
+  assert.equal(await page.evaluate(()=>window.__calendarXss),undefined);
+  const titles=await page.locator('more-info-parro-calendar >> h3').allTextContents();
+  assert.match(titles[0],/<img/);assert.equal(titles[19],'Event 19');assert.ok(!titles.includes('PAST'));
+ });
+ await test('calendar all-day range respects exclusive end and HA timezone',async()=>{
+  const labels=await page.evaluate(()=>[
+   card._when({start:{date:'2026-11-18'},end:{date:'2026-11-19'}}),
+   card._when({start:{date:'2026-11-18'},end:{date:'2026-11-21'}}),
+   card._when({start:{dateTime:'2026-11-18T14:00:00Z'},end:{dateTime:'2026-11-18T14:30:00Z'}})
+  ]);
+  assert.equal(labels[0],'18 november 2026 · Hele dag');
+  assert.equal(labels[1],'18 november 2026 – 20 november 2026 · Hele dag');
+  assert.equal(labels[2],'18 november 2026 · 15:00 – 15:30');
+ });
+ await test('calendar empty/error states clear data, hide raw errors and support retry',async()=>{
+  await ready('?surface=calendar&state=empty');assert.match(await page.locator('more-info-parro-calendar >> .calendar-list').innerText(),/Geen komende/);
+  await page.evaluate(async()=>{fixture.state='unauthorized';await card._load();});
+  assert.equal(await page.locator('more-info-parro-calendar >> article').count(),0);
+  assert.match(await page.locator('more-info-parro-calendar >> .calendar-list').innerText(),/niet worden opgehaald/);
+  assert.ok(!(await page.locator('more-info-parro-calendar').innerText()).includes('private raw error'));
+  await page.evaluate(()=>fixture.state='ready');await page.getByRole('button',{name:'Opnieuw proberen'}).click();
+  await page.waitForFunction(()=>card._events.length===3);
+ });
+ await test('calendar user switch and rename discard pending content and invalid IDs never request',async()=>{
+  await page.goto(base+'?surface=calendar&state=loading');await page.waitForFunction(()=>fixture.deferred.length===1);
+  await page.evaluate(()=>card.hass=makeHass('other-user'));await page.waitForFunction(()=>fixture.deferred.length===2);
+  await page.evaluate(()=>fixture.deferred[0].resolve(fixture.calendarEvents));
+  await page.waitForTimeout(20);assert.equal(await page.locator('more-info-parro-calendar >> article').count(),0);
+  await page.evaluate(()=>fixture.deferred[1].resolve([]));await page.waitForFunction(()=>!card._loading);
+  await page.evaluate(()=>{fixture.state='ready';card.stateObj={attributes:{parro_calendar_entity_id:'calendar.renamed'}};});
+  await page.waitForFunction(()=>card._events.length===3);
+  assert.match(await page.evaluate(()=>fixture.apiCalls.at(-1).path),/^calendars\/calendar.renamed\?/);
+  const before=await page.evaluate(()=>fixture.apiCalls.length);
+  await page.evaluate(()=>card.stateObj={attributes:{parro_calendar_entity_id:'../../private'}});
+  assert.equal(await page.evaluate(()=>fixture.apiCalls.length),before);
+  assert.equal(await page.locator('more-info-parro-calendar >> article').count(),0);
+ });
+ await test('calendar clears on hide/close and fetches again on return',async()=>{
+  await ready('?surface=calendar');await page.evaluate(()=>{Object.defineProperty(document,'visibilityState',{configurable:true,value:'hidden'});document.dispatchEvent(new Event('visibilitychange'));});
+  assert.equal(await page.evaluate(()=>card._events.length),0);
+  const before=await page.evaluate(()=>fixture.apiCalls.length);await page.evaluate(()=>card._load());assert.equal(await page.evaluate(()=>fixture.apiCalls.length),before);
+  await page.evaluate(()=>{Object.defineProperty(document,'visibilityState',{configurable:true,value:'visible'});document.dispatchEvent(new Event('visibilitychange'));});
+  await page.waitForFunction(()=>card._events.length===3);
+  await page.evaluate(()=>card.remove());assert.equal(await page.evaluate(()=>card._events.length),0);
+ });
  if(!process.env.PARRO_SKIP_SCREENSHOTS) {
  // One batched visual inspection: desktop/light + mobile/dark + editor + loading/error.
  const artifacts=new URL('./artifacts/',import.meta.url);await mkdir(artifacts,{recursive:true});
  for(const shot of [
+  {name:'calendar-desktop',width:700,height:850,query:'?surface=calendar'},
+  {name:'calendar-mobile',width:390,height:850,query:'?surface=calendar&theme=dark'},
   {name:'desktop-light',width:1100,height:1050,query:''},
   {name:'mobile-dark',width:390,height:1000,query:'?theme=dark'},
   {name:'messages-desktop',width:1100,height:950,query:'?source=messages&room=101'},

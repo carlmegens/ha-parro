@@ -1,6 +1,6 @@
 # Voorbeelddashboard Parro
 
-[dashboard.yaml](dashboard.yaml) is een zelfstandig, generiek dashboard met één Parro-kaart. Het bevat geen accounts, foto's of schoolberichten. De integratie en kaart worden samen geïnstalleerd vanuit [ParroHACS](https://github.com/carlmegens/ParroHACS).
+[dashboard.yaml](dashboard.yaml) is een zelfstandig, generiek dashboard met één Parro-kaart. Het bevat geen accounts, foto's of schoolberichten. De integratie en kaart worden samen geïnstalleerd vanuit [ha-parro](https://github.com/carlmegens/ha-parro).
 
 Dit voorbeeld is optioneel. Vanaf versie 0.3.0 open je mededelingen en gesprekken rechtstreeks via de bestaande tellers op het Parro-apparaat. Daarvoor hoef je geen dashboard aan te maken.
 

@@ -279,6 +279,13 @@ async def test_next_appointment_time_details_rollover_and_shared_cache(
         state = hass.states.get(entity_id)
         assert dt_util.parse_datetime(state.state) == datetime(2026, 10, 23, 7, tzinfo=UTC)
         assert state.attributes["summary"] == "First"
+        assert state.attributes["custom_ui_more_info"] == "more-info-parro-calendar"
+        assert state.attributes["parro_calendar_entity_id"] == calendar_id
+        registry.async_update_entity(calendar_id, new_entity_id="calendar.renamed_school")
+        await hass.async_block_till_done()
+        calendar_id = "calendar.renamed_school"
+        state = hass.states.get(entity_id)
+        assert state.attributes["parro_calendar_entity_id"] == calendar_id
         assert state.attributes["location"] == "School"
         assert state.attributes["all_day"] is False
         assert registry.async_get(entity_id).device_id == registry.async_get(calendar_id).device_id

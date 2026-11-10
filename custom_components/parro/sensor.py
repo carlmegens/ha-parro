@@ -7,6 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
@@ -102,6 +103,7 @@ class ParroNextAppointmentSensor(ParroEntity, SensorEntity):
         super().__init__(coordinator, entry, "next_appointment")
         self._events = []
         self._calendar_available = False
+        self._calendar_unique_id = f"{entry.entry_id}_school_calendar"
 
     @property
     def available(self) -> bool:
@@ -119,16 +121,23 @@ class ParroNextAppointmentSensor(ParroEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self):
+        routing = {
+            "custom_ui_more_info": "more-info-parro-calendar",
+            "parro_calendar_entity_id": er.async_get(self.hass).async_get_entity_id(
+                "calendar", "parro", self._calendar_unique_id
+            ),
+        }
         if not self.available:
-            return None
+            return routing
         if event := self._next_event():
             return {
+                **routing,
                 "summary": event.summary,
                 "location": event.location,
                 "all_day": not isinstance(event.start, datetime),
                 "end_time": event.end.isoformat(),
             }
-        return {"summary": None, "location": None, "all_day": None, "end_time": None}
+        return {**routing, "summary": None, "location": None, "all_day": None, "end_time": None}
 
     async def async_update(self) -> None:
         now = dt_util.now()
@@ -144,6 +153,17 @@ class ParroNextAppointmentSensor(ParroEntity, SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
+
+        # Calendar setup may finish after sensor setup. Also follow calendar
+        # renames without retaining a stale entity ID in the popup route.
+        @callback
+        def registry_updated(event):
+            if event.data.get("entity_id", "").startswith("calendar."):
+                self.async_write_ha_state()
+
+        self.async_on_remove(
+            self.hass.bus.async_listen(er.EVENT_ENTITY_REGISTRY_UPDATED, registry_updated)
+        )
 
         # Move to the following appointment when one starts, without downloading
         # the subscriptions more frequently. The listener is removed on unload.

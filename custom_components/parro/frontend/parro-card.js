@@ -1,6 +1,10 @@
-/* Parro card 0.3.0 — content stays in this card's memory, never in entity states. */
+/* Parro card 0.4.2 — content stays in this card's memory, never in entity states. */
 const STRINGS = {
   nl: {
+    appointments: 'Komende schoolafspraken', calendarRange: 'Maximaal 20 afspraken · komende 365 dagen',
+    calendarLoading: 'Schoolafspraken ophalen…', calendarEmpty: 'Geen komende schoolafspraken',
+    calendarError: 'Schoolafspraken konden niet worden opgehaald.', calendarMissing: 'De schoolagenda is nog niet beschikbaar.',
+    openCalendar: 'Open volledige agenda', allDay: 'Hele dag', appointment: 'Schoolafspraak', ongoing: 'Nu bezig',
     announcements: 'Mededelingen', conversations: 'Gesprekken', source: 'Inhoud', conversation: 'Gesprek', message: 'Bericht',
     chooseConversation: 'Kies een gesprek', chooseConversationHint: 'Selecteer hierboven het gesprek dat je wilt lezen.',
     noConversations: 'Geen gesprekken', noConversationsHint: 'Er zijn geen gesprekken beschikbaar voor dit account.',
@@ -24,6 +28,10 @@ const STRINGS = {
     untitled: 'Mededeling', retry: 'Opnieuw proberen', noGroups: 'Groepen ophalen…',
   },
   en: {
+    appointments: 'Upcoming school events', calendarRange: 'Up to 20 events · next 365 days',
+    calendarLoading: 'Loading school events…', calendarEmpty: 'No upcoming school events',
+    calendarError: 'Could not load school events.', calendarMissing: 'The school calendar is not available yet.',
+    openCalendar: 'Open full calendar', allDay: 'All day', appointment: 'School event', ongoing: 'Happening now',
     announcements: 'Announcements', conversations: 'Conversations', source: 'Content', conversation: 'Conversation', message: 'Message',
     chooseConversation: 'Choose a conversation', chooseConversationHint: 'Select the conversation you want to read above.',
     noConversations: 'No conversations', noConversationsHint: 'No conversations are available for this account.',
@@ -576,6 +584,111 @@ const SURFACE_CSS = `${CSS}
   .panel-account { display:grid; gap:6px; margin-bottom:20px; }
   @media(max-width:600px) { .panel-content { padding:12px 12px 24px; } }
 `;
+class MoreInfoParroCalendar extends HTMLElement {
+  constructor() {
+    super(); this.attachShadow({ mode: 'open' }); this._epoch = 0; this._events = [];
+    this._visibility = () => { this._reset(); this._sync(); };
+  }
+  set hass(value) { this._hass = value; this._sync(); }
+  set stateObj(value) { this._stateObj = value; this._sync(); }
+  connectedCallback() { document.addEventListener('visibilitychange', this._visibility); this._sync(); }
+  disconnectedCallback() { document.removeEventListener('visibilitychange', this._visibility); this._reset(); }
+  _reset() {
+    this._epoch++; this._context = ''; this._events = []; this._error = ''; this._loading = false;
+    clearInterval(this._timer); this._timer = undefined; this._render();
+  }
+  _sync() {
+    if (!this.isConnected || !this._hass || !this._stateObj || document.visibilityState === 'hidden') return;
+    const entity = this._stateObj.attributes?.parro_calendar_entity_id;
+    const entityId = typeof entity === 'string' && /^calendar\.[a-z0-9_]+$/.test(entity) ? entity : '';
+    const context = JSON.stringify([entityId, this._hass.user?.id, locale(this._hass), this._hass.config?.time_zone]);
+    if (this._context === context) return;
+    this._reset(); this._context = context; this._entityId = entityId; this._started = true;
+    this._load(); this._timer = setInterval(() => this._load(), POLL_MS);
+  }
+  async _load() {
+    if (!this.isConnected || document.visibilityState === 'hidden' || this._loading) return;
+    if (!this._entityId) { this._error = 'calendarMissing'; this._render(); return; }
+    const epoch = ++this._epoch;
+    this._loading = true; this._events = []; this._error = ''; this._render();
+    try {
+      const now = new Date(); const end = new Date(now.getTime() + 365 * 86400000);
+      const query = new URLSearchParams({ start: now.toISOString(), end: end.toISOString() });
+      // HA's native endpoint enforces calendar entity read permissions.
+      const result = await this._hass.callApi('GET', `calendars/${this._entityId}?${query}`);
+      if (epoch !== this._epoch) return;
+      if (!Array.isArray(result) || result.length > 5000) throw new Error('Invalid calendar response');
+      const today = this._dayKey(now);
+      this._events = result.filter((event) => {
+        if (event?.start?.date && event?.end?.date) {
+          return /^\d{4}-\d{2}-\d{2}$/.test(event.start.date) && /^\d{4}-\d{2}-\d{2}$/.test(event.end.date)
+            && event.end.date > today && event.start.date <= this._dayKey(end);
+        }
+        return Number.isFinite(Date.parse(event?.start?.dateTime)) && Number.isFinite(Date.parse(event?.end?.dateTime))
+          && Date.parse(event.end.dateTime) > now.getTime() && Date.parse(event.start.dateTime) < end.getTime();
+      }).sort((a, b) => this._sortKey(a).localeCompare(this._sortKey(b))).slice(0, 20);
+    } catch {
+      if (epoch !== this._epoch) return;
+      this._events = []; this._error = 'calendarError';
+    } finally {
+      if (epoch === this._epoch) { this._loading = false; this._render(); }
+    }
+  }
+  _zone() { return this._hass?.config?.time_zone || Intl.DateTimeFormat().resolvedOptions().timeZone; }
+  _dayKey(date) {
+    const parts = new Intl.DateTimeFormat('en-CA', { timeZone: this._zone(), year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date);
+    return ['year', 'month', 'day'].map((key) => parts.find((part) => part.type === key).value).join('-');
+  }
+  _sortKey(event) {
+    if (event.start.date) return `${event.start.date}T00:00:00`;
+    const date = new Date(event.start.dateTime);
+    return this._dayKey(date) + 'T' + new Intl.DateTimeFormat('en-GB', { timeZone: this._zone(), hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }).format(date);
+  }
+  _when(event) {
+    const t = words(this._hass); const allDay = Boolean(event.start.date);
+    const start = new Date(allDay ? `${event.start.date}T00:00:00Z` : event.start.dateTime);
+    // Calendar date-only ends are exclusive; keep them independent of timezone.
+    const end = new Date(allDay ? Date.parse(`${event.end.date}T00:00:00Z`) - 86400000 : event.end.dateTime);
+    const options = { timeZone: allDay ? 'UTC' : this._zone(), day: 'numeric', month: 'long', year: 'numeric' };
+    const dateFormat = new Intl.DateTimeFormat(locale(this._hass), options);
+    if (allDay) return `${dateFormat.format(start)}${+end > +start ? ` – ${dateFormat.format(end)}` : ''} · ${t.allDay}`;
+    const timeFormat = new Intl.DateTimeFormat(locale(this._hass), { timeZone: this._zone(), hour: '2-digit', minute: '2-digit' });
+    const sameDay = this._dayKey(start) === this._dayKey(end);
+    return `${dateFormat.format(start)} · ${timeFormat.format(start)} – ${sameDay ? '' : dateFormat.format(end) + ' · '}${timeFormat.format(end)}`;
+  }
+  _render() {
+    const t = words(this._hass);
+    if (!this._shell) {
+      const style = el('style');
+      style.textContent = `${SURFACE_CSS}\n.calendar-list { max-height:60vh; overflow-y:auto; } .calendar-list h3,.location { overflow-wrap:anywhere; } .location { margin:4px 0 0; }`;
+      const header = el('div', 'header'); const heading = el('div', 'heading');
+      this._title = el('h2'); this._hint = el('p', 'subtitle'); heading.append(this._title, this._hint);
+      this._refresh = button(t.refresh, () => this._load()); this._refresh.append(icon('refresh'));
+      header.append(heading, this._refresh); this._shell = el('div');
+      const footer = el('div', 'surface-link'); this._link = internalLink(t.openCalendar, '/calendar'); footer.append(this._link);
+      this.shadowRoot.replaceChildren(style, header, this._shell, footer);
+    }
+    this._title.textContent = t.appointments; this._hint.textContent = t.calendarRange; this._link.textContent = t.openCalendar;
+    this._refresh.setAttribute('aria-label', t.refresh); this._refresh.title = t.refresh;
+    // Keep the focused control in place while the asynchronous list refreshes.
+    this._refresh.setAttribute('aria-disabled', String(Boolean(this._loading)));
+    const list = el('div', 'list calendar-list'); list.setAttribute('aria-live', 'polite'); list.setAttribute('aria-busy', String(Boolean(this._loading)));
+    if (this._loading || this._error || !this._events.length) {
+      list.append(el('p', 'state', this._loading ? t.calendarLoading : t[this._error] || t.calendarEmpty));
+      if (this._error) list.append(button(t.retry, () => this._load(), 'text-button'));
+    } else for (const event of this._events) {
+      const article = el('article'); const time = el('time', 'meta', this._when(event));
+      time.dateTime = event.start.date || event.start.dateTime;
+      article.append(time, el('h3', '', safeText(event.summary, 1000) || t.appointment));
+      if (event.location) article.append(el('p', 'location hint', safeText(event.location, 1000)));
+      if (event.start.dateTime && Date.parse(event.start.dateTime) <= Date.now()) article.append(el('p', 'hint', t.ongoing));
+      list.append(article);
+    }
+    this._shell.replaceChildren(list);
+  }
+}
+if (!customElements.get('more-info-parro-calendar')) customElements.define('more-info-parro-calendar', MoreInfoParroCalendar);
+
 class MoreInfoParro extends HTMLElement {
   constructor() { super(); this.attachShadow({ mode: 'open' }); }
   set hass(value) { this._hass = value; this._sync(); }

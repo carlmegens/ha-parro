@@ -2,15 +2,15 @@
 
 Schoolmededelingen, gesprekken en beschikbare foto's openen vanuit je Parro-apparaat in Home Assistant. Eén HACS-installatie levert de integratie en de bijbehorende weergave, met toegang per account en gebruiker.
 
-[![Open Parro in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=carlmegens&repository=ParroHACS&category=integration)
+[![Open Parro in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=carlmegens&repository=ha-parro&category=integration)
 
-**Versie 0.4.1 toont ook de volgende schoolafspraak met datum en tijd.** Schoolafspraken verschijnen automatisch in de gewone Home Assistant-agenda en zijn bruikbaar op eigen dashboards en in automatiseringen.
+**Versie 0.4.2 toont komende schoolafspraken direct in de apparaatpop-up.** Schoolafspraken verschijnen automatisch in de gewone Home Assistant-agenda en zijn bruikbaar op eigen dashboards en in automatiseringen.
 
 ## Installeren via Marketplace of HACS
 
 Vereist: Home Assistant Core **2026.8.3 of nieuwer**, Marketplace (vanaf Home Assistant 2026.11) of HACS en een Parro-/ParnasSys-account met de gewenste schoolinformatie. De knop hierboven opent deze repository in je eigen HACS-installatie.
 
-1. Open **Parro** in HACS en download de integratie. Handmatig toevoegen kan via **Aangepaste repositories**, adres **https://github.com/carlmegens/ParroHACS**, type **Integratie**.
+1. Open **Parro** in HACS en download de integratie. Handmatig toevoegen kan via **Aangepaste repositories**, adres **https://github.com/carlmegens/ha-parro**, type **Integratie**.
 2. Herstart Home Assistant.
 3. Ga naar **Instellingen → Apparaten en diensten → Integratie toevoegen**, zoek **Parro** en meld je aan.
 4. Kies de juiste identiteit wanneer het account meerdere ParnasSys-identiteiten aanbiedt.
@@ -30,7 +30,7 @@ De apparaatpagina biedt ook een knop om de gekoppelde Parro-weergave te openen. 
 
 ## Schoolagenda
 
-Op de apparaatpagina staat **Volgende schoolafspraak**, met de datum en tijd van de eerstvolgende afspraak die nog moet beginnen. Klik voor de titel, locatie, eindtijd en de aanduiding voor een hele dag. De datum wordt in de tijdzone van Home Assistant weergegeven. Als binnen de komende 365 dagen geen volgende afspraak bekend is, heeft deze datumsensor geen waarde; Home Assistant toont dan **Onbekend**. Bij een ophaalfout staat hij op **Niet beschikbaar**. Een begonnen afspraak schuift binnen een minuut door naar de volgende, zonder extra downloads.
+Op de apparaatpagina staat **Volgende schoolafspraak**, met de datum en tijd van de eerstvolgende afspraak die nog moet beginnen. Klik voor een chronologische lijst van maximaal 20 komende of nog lopende afspraken binnen 365 dagen, inclusief titel, datum, begin- en eindtijd, locatie en hele dagen. Vanuit de pop-up kun je de volledige Agenda openen. De lijst vernieuwt elke vijf minuten zolang de pop-up zichtbaar is, of met de vernieuwknop. Na een update kan eenmaal herladen van de browser nodig zijn. De datum wordt in de tijdzone van Home Assistant weergegeven. Als binnen de komende 365 dagen geen volgende afspraak bekend is, heeft deze datumsensor geen waarde; Home Assistant toont dan **Onbekend**. Bij een ophaalfout staat hij op **Niet beschikbaar**. Een begonnen afspraak schuift binnen een minuut door naar de volgende, zonder extra downloads.
 
 De gewone kalenderentiteit blijft beschikbaar voor de zijbalk en automatiseringen. Daar betekent **Aan** dat er nu een afspraak bezig is en **Uit** dat er nu geen afspraak bezig is; dit is geen aan/uitschakelaar voor synchronisatie.
 
@@ -77,13 +77,13 @@ Bij dashboardresources die Home Assistant via de interface beheert, registreert 
 
 Controleer zo nodig onder **Instellingen → Dashboards → menu → Resources / Bronnen** of deze resource eenmaal aanwezig is:
 
-- URL: `/parro_static/parro-card.js?v=0.3.0`
+- URL: `/parro_static/parro-card.js?v=0.4.2`
 - Type: **JavaScript-module**
 
 Beheer je dashboardresources in YAML, voeg dan dit item toe aan de bestaande lijst met resources:
 
 ```yaml
-- url: /parro_static/parro-card.js?v=0.3.0
+- url: /parro_static/parro-card.js?v=0.4.2
   type: module
 ```
 

@@ -33,7 +33,12 @@ const items = [
   {id:'m3',title:'Een kijkje in de klas',contents:'De eerste schoolweek zit erop. We hebben kennisgemaakt, samen afspraken gemaakt en de hoeken in de klas ontdekt. Fijn om iedereen weer te zien!',created_at:'2026-09-04T14:00:00+02:00',group_id:'20',group_name:'Voorbeeldgroep B',sender:'Team voorbeeldschool',images:[{id:'cccccccccccccccccccccccccccccccc',name:'Derde synthetische testfoto'}]},
 ];
 window.fixture = {
-  items, calls:[], photoCalls:[], revoked:[], state:params.get('state')||'ready', deferred:[], userId:'synthetic-user', imageStatus:200,
+  calendarEvents: [
+    {summary:'Gesprek met het voorbeeldteam',location:'Lokaal 3',start:{dateTime:new Date(Date.now()+8*86400000).toISOString()},end:{dateTime:new Date(Date.now()+8*86400000+1800000).toISOString()}},
+    {summary:'Studiedag',start:{date:new Date(Date.now()+14*86400000).toISOString().slice(0,10)},end:{date:new Date(Date.now()+15*86400000).toISOString().slice(0,10)}},
+    {summary:'Winterfeest',location:'Aula',start:{dateTime:new Date(Date.now()+28*86400000).toISOString()},end:{dateTime:new Date(Date.now()+28*86400000+3600000).toISOString()}},
+  ],
+  apiCalls:[], items, calls:[], photoCalls:[], revoked:[], state:params.get('state')||'ready', deferred:[], userId:'synthetic-user', imageStatus:200,
   pendingTypes:[],
   conversations:[{id:'101',title:'Contact met het voorbeeldteam',type:'private',sort_date:'2026-09-08T09:30:00+02:00',unread_count:2},{id:'202',title:'Bibliotheekbezoek',type:'group',sort_date:'2026-09-07T13:00:00+02:00',unread_count:0}],
   chatItems:{
@@ -47,7 +52,13 @@ window.fixture = {
 const originalRevoke=URL.revokeObjectURL.bind(URL);URL.revokeObjectURL=(url)=>{fixture.revoked.push(url);originalRevoke(url);};
 window.makeHass = (userId=fixture.userId) => ({
   devices:{'synthetic-device':{id:'synthetic-device',config_entries:['example-account']}},
-  user:{id:userId},locale:{language:params.get('lang')||'nl'},
+  config:{time_zone:'Europe/Amsterdam'},user:{id:userId},locale:{language:params.get('lang')||'nl'},
+  async callApi(method, path) {
+    fixture.apiCalls.push({method,path});
+    if (fixture.state==='loading') return new Promise((resolve,reject)=>fixture.deferred.push({resolve,reject}));
+    if (fixture.state==='unauthorized') throw new Error('Never show this private raw error');
+    return fixture.state==='empty'?[]:fixture.calendarEvents;
+  },
   async callWS(request) {
     fixture.calls.push({...request});
     if(['parro/feed','parro/messages'].includes(request.type) && (!Number.isInteger(request.limit) || request.limit<1 || request.limit>20 || (request.group_id && !/^[1-9][0-9]{0,19}$/.test(request.group_id)))) throw {code:'invalid_format'};
@@ -75,7 +86,11 @@ window.makeHass = (userId=fixture.userId) => ({
 const source=params.get('source')==='messages'?'messages':'announcements';
 const config={type:'custom:parro-card',config_entry_id:params.get('state')==='choose'?'':'example-account',source,limit:5,show_images:true,...(params.has('room')?{chatroom_id:params.get('room')}: {})};
 const mount=document.getElementById('mount');
-if(params.get('surface')==='popup') {
+if(params.get('surface')==='calendar') {
+  window.card=document.createElement('more-info-parro-calendar');
+  card.stateObj={entity_id:'sensor.synthetic_next',attributes:{parro_calendar_entity_id:'calendar.synthetic_school'}};
+  card.hass=makeHass();mount.className='popup';mount.append(card);
+} else if(params.get('surface')==='popup') {
   window.surface=document.createElement('more-info-parro');surface.stateObj={entity_id:'sensor.synthetic_parro',attributes:{parro_config_entry_id:'example-account',parro_source:source}};surface.hass=makeHass();
   mount.className='popup';mount.append(surface);window.card=surface._card;
 } else if(params.get('surface')==='panel') {

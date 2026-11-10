@@ -1,5 +1,14 @@
 # Wijzigingen
 
+## 0.4.2 — komende afspraken in de apparaatpop-up
+
+- Hernoemt de GitHub-repository naar `carlmegens/ha-parro` op verzoek van de catalogusreview. De integratienaam en entiteit-ID’s blijven gelijk; bestaande GitHub-links worden doorgestuurd.
+
+- Klik op **Volgende schoolafspraak** voor maximaal 20 komende of lopende afspraken binnen 365 dagen, met datum, tijd, locatie en hele-dag-aanduiding.
+- Opent de volledige Agenda vanuit de lijst en biedt vernieuwen, laden, leeg en opnieuw proberen.
+- Gebruikt de bestaande agenda en Home Assistant-entiteitsrechten; de lijst wordt niet als sensorattribuut opgeslagen. Volgt hernoemde agenda-entiteiten en wist geladen inhoud bij wisselen van gebruiker of sluiten van de pop-up.
+- Vernieuwt de meegeleverde frontendversie. Herlaad na installatie zo nodig eenmaal de browser.
+
 ## 0.4.1 — volgende schoolafspraak
 
 - Voegt **Volgende schoolafspraak** toe aan het bestaande Parro-apparaat: datum en tijd, met titel, locatie, eindtijd en hele-dag-aanduiding in de details.

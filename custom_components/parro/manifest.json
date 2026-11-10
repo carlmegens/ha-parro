@@ -13,13 +13,13 @@
     "http",
     "websocket_api"
   ],
-  "documentation": "https://github.com/carlmegens/ParroHACS",
+  "documentation": "https://github.com/carlmegens/ha-parro",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/carlmegens/ParroHACS/issues",
+  "issue_tracker": "https://github.com/carlmegens/ha-parro/issues",
   "requirements": [
     "parro==1.1.0",
     "ical>=14.1.1"
   ],
-  "version": "0.4.1"
+  "version": "0.4.2"
 }
