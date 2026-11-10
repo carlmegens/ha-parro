@@ -101,7 +101,7 @@ async def test_cache_refresh_dedupe_and_webcal(hass, mock_api):
         assert len(await feed.async_events(START, END)) == 1
         assert len(await feed.async_events(START, END)) == 1
         download.assert_awaited_once_with(URL)
-        feed._updated = 0
+        feed._updated -= 1801
         await feed.async_events(START, END)
         assert download.await_count == 2
     await feed.async_close()
@@ -115,7 +115,7 @@ async def test_failed_refresh_does_not_serve_stale_or_partial_calendar(hass, moc
     mock_api.async_get_calendar_urls.return_value = [URL]
     with patch.object(feed, "_download", AsyncMock(return_value=DATA)) as download:
         await feed.async_events(START, END)
-        feed._updated = 0
+        feed._updated -= 1801
         mock_api.async_get_calendar_urls.return_value = [URL, URL + "2"]
         download.side_effect = [DATA, ParroConnectionError("synthetic")]
         with pytest.raises(ParroError):
@@ -215,7 +215,7 @@ async def test_native_calendar_service_device_and_auth_failure(
             return_response=True,
         )
         assert len(response[entity_id]["events"]) == 1
-        config_entry.runtime_data.calendar_feed._updated = 0
+        config_entry.runtime_data.calendar_feed._updated -= 1801
         mock_api.async_get_calendar_urls.side_effect = ParroAuthError("synthetic private detail")
         with pytest.raises(HomeAssistantError, match="Parro sign-in has expired"):
             await hass.services.async_call(
