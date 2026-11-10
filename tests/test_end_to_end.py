@@ -106,7 +106,7 @@ async def test_login_setup_action_refresh_and_unload_against_http_server(hass, c
         entry = result["result"]
         assert entry.unique_id == "123"
         assert entry.state is ConfigEntryState.LOADED
-        assert len(hass.states.async_all()) == 7
+        assert len(hass.states.async_all()) == 8
         assert not any(
             request.url.path.endswith(("event", "chatroom", "chatmessage"))
             for request in requests

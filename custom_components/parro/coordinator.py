@@ -2,12 +2,12 @@
 
 import asyncio
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -55,6 +55,22 @@ class ParroCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await asyncio.gather(
             self.feed.async_close(), self.chat_feed.async_close(), self.calendar_feed.async_close()
         )
+
+    async def async_get_calendar_events(self, start: datetime, end: datetime):
+        """Read calendar content with shared authentication handling for both entities."""
+        try:
+            if self.content_auth_failed:
+                raise ParroError("Authentication required")
+            result = await self.calendar_feed.async_events(start, end)
+            if self.content_auth_failed:
+                raise ParroError("Authentication required")
+            return result
+        except ParroAuthError:
+            await self.async_invalidate_auth()
+            self.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError("Parro sign-in has expired") from None
+        except ParroError:
+            raise HomeAssistantError("The Parro calendar is unavailable") from None
 
     async def _async_update_data(self) -> dict[str, Any]:
         try:

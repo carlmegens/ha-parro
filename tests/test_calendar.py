@@ -248,4 +248,76 @@ async def test_calendar_failure_does_not_break_counters(hass, config_entry, mock
         await hass.async_block_till_done()
     states = hass.states.async_all()
     assert next(s for s in states if s.domain == "calendar").state == "unavailable"
-    assert all(s.state != "unavailable" for s in states if s.domain != "calendar")
+    assert sum(s.state == "unavailable" for s in states) == 2
+
+
+async def test_next_appointment_time_details_rollover_and_shared_cache(
+    hass, config_entry, mock_api, freezer
+):
+    from pytest_homeassistant_custom_component.common import async_fire_time_changed
+
+    freezer.move_to("2026-10-23T06:00:00Z")
+    data = ics(
+        "DTSTART:20261023T070000Z\r\nDTEND:20261023T080000Z\r\nSUMMARY:First\r\nLOCATION:School",
+        "DTSTART;VALUE=DATE:20261024\r\nDTEND;VALUE=DATE:20261025\r\nSUMMARY:Second",
+    )
+    config_entry.add_to_hass(hass)
+    mock_api.async_get_calendar_urls.return_value = [URL]
+    with (
+        patch("custom_components.parro.ParroApi", return_value=mock_api),
+        patch.object(ParroCalendarFeed, "_download", AsyncMock(return_value=data)) as download,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        registry = er.async_get(hass)
+        entity_id = registry.async_get_entity_id(
+            "sensor", "parro", f"{config_entry.entry_id}_next_appointment"
+        )
+        calendar_id = registry.async_get_entity_id(
+            "calendar", "parro", f"{config_entry.entry_id}_school_calendar"
+        )
+        state = hass.states.get(entity_id)
+        assert dt_util.parse_datetime(state.state) == datetime(2026, 10, 23, 7, tzinfo=UTC)
+        assert state.attributes["summary"] == "First"
+        assert state.attributes["location"] == "School"
+        assert state.attributes["all_day"] is False
+        assert registry.async_get(entity_id).device_id == registry.async_get(calendar_id).device_id
+        assert URL not in str(state.as_dict())
+        download.assert_awaited_once()
+        # A started appointment no longer counts as the next one. The minute
+        # listener updates the display without needing a calendar download.
+        freezer.move_to("2026-10-23T07:01:00Z")
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        state = hass.states.get(entity_id)
+        assert state.attributes["summary"] == "Second"
+        assert state.attributes["all_day"] is True
+        assert dt_util.parse_datetime(state.state) == datetime(2026, 10, 23, 22, tzinfo=UTC)
+        await config_entry.runtime_data.async_invalidate_auth()
+        assert hass.states.get(entity_id).state == "unavailable"
+        assert "summary" not in hass.states.get(entity_id).attributes
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+
+
+async def test_next_appointment_empty_and_recovery(hass, config_entry, mock_api):
+    config_entry.add_to_hass(hass)
+    with patch("custom_components.parro.ParroApi", return_value=mock_api):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+    entity_id = er.async_get(hass).async_get_entity_id(
+        "sensor", "parro", f"{config_entry.entry_id}_next_appointment"
+    )
+    entity = hass.data["sensor"].get_entity(entity_id)
+    assert hass.states.get(entity_id).state == "unknown"
+    assert hass.states.get(entity_id).attributes["summary"] is None
+    with patch.object(
+        config_entry.runtime_data,
+        "async_get_calendar_events",
+        side_effect=HomeAssistantError("unavailable"),
+    ):
+        await entity.async_update()
+        entity.async_write_ha_state()
+    assert hass.states.get(entity_id).state == "unavailable"
+    await entity.async_update()
+    entity.async_write_ha_state()
+    assert hass.states.get(entity_id).state == "unknown"

@@ -28,7 +28,7 @@ async def entity_states(hass, config_entry, mock_api):
 
 
 async def test_compact_states_and_generic_names(hass, config_entry, mock_api, entity_states):
-    assert len(hass.states.async_all()) == 7
+    assert len(hass.states.async_all()) == 8
     for key, expected in (
         ("children_count", "2"),
         ("groups_count", "3"),

@@ -71,6 +71,9 @@
       },
       "last_success": {
         "name": "Laatste geslaagde synchronisatie"
+      },
+      "next_appointment": {
+        "name": "Volgende schoolafspraak"
       }
     },
     "binary_sensor": {

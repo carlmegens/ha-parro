@@ -71,6 +71,9 @@
       },
       "last_success": {
         "name": "Last successful synchronization"
+      },
+      "next_appointment": {
+        "name": "Next school appointment"
       }
     },
     "binary_sensor": {

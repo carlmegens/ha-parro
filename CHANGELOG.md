@@ -1,5 +1,11 @@
 # Wijzigingen
 
+## 0.4.1 — volgende schoolafspraak
+
+- Voegt **Volgende schoolafspraak** toe aan het bestaande Parro-apparaat: datum en tijd, met titel, locatie, eindtijd en hele-dag-aanduiding in de details.
+- Laat begonnen afspraken binnen een minuut doorschuiven naar de volgende. De sensor deelt de bestaande agendacache en veroorzaakt geen extra abonnementsdownloads.
+- Behoudt de native kalenderentiteit, entiteit-ID en kalenderautomatiseringen. Verduidelijkt de betekenis van de standaard Aan/Uit-status in de README.
+
 ## 0.4.0 — schoolagenda en automatische releasecontroles
 
 - Voegt een native, alleen-lezen schoolagenda toe aan het Parro-apparaat, de Home Assistant-agenda en standaard agendakaarten en automatiseringen.

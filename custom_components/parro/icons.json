@@ -15,6 +15,9 @@
       },
       "last_success": {
         "default": "mdi:clock-check-outline"
+      },
+      "next_appointment": {
+        "default": "mdi:calendar-clock"
       }
     },
     "binary_sensor": {

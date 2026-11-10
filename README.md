@@ -4,7 +4,7 @@ Schoolmededelingen, gesprekken en beschikbare foto's openen vanuit je Parro-appa
 
 [![Open Parro in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=carlmegens&repository=ParroHACS&category=integration)
 
-**Versie 0.4.0 voegt een schoolagenda toe.** Schoolafspraken verschijnen automatisch in de gewone Home Assistant-agenda en zijn bruikbaar op eigen dashboards en in automatiseringen.
+**Versie 0.4.1 toont ook de volgende schoolafspraak met datum en tijd.** Schoolafspraken verschijnen automatisch in de gewone Home Assistant-agenda en zijn bruikbaar op eigen dashboards en in automatiseringen.
 
 ## Installeren via Marketplace of HACS
 
@@ -30,11 +30,15 @@ De apparaatpagina biedt ook een knop om de gekoppelde Parro-weergave te openen. 
 
 ## Schoolagenda
 
+Op de apparaatpagina staat **Volgende schoolafspraak**, met de datum en tijd van de eerstvolgende afspraak die nog moet beginnen. Klik voor de titel, locatie, eindtijd en de aanduiding voor een hele dag. De datum wordt in de tijdzone van Home Assistant weergegeven. Als binnen de komende 365 dagen geen volgende afspraak bekend is, heeft deze datumsensor geen waarde; Home Assistant toont dan **Onbekend**. Bij een ophaalfout staat hij op **Niet beschikbaar**. Een begonnen afspraak schuift binnen een minuut door naar de volgende, zonder extra downloads.
+
+De gewone kalenderentiteit blijft beschikbaar voor de zijbalk en automatiseringen. Daar betekent **Aan** dat er nu een afspraak bezig is en **Uit** dat er nu geen afspraak bezig is; dit is geen aan/uitschakelaar voor synchronisatie.
+
 Na installeren of bijwerken en herstarten verschijnt **Parro Schoolagenda** op het Parro-apparaat en onder **Agenda** in de zijbalk. Selecteer deze agenda om de schoolafspraken te zien. Voor een eigen dashboard gebruik je de ingebouwde **Agenda**-kaart met de nieuwe `calendar`-entiteit; voor automatiseringen de gewone agendatriggers of `calendar.get_events`.
 
 De integratie leest de iCal-abonnementen van het aangemelde account automatisch. Hele dagen, tijdzones, terugkerende afspraken, uitzonderingen en annuleringen worden verwerkt. De agenda is alleen-lezen en ververst ongeveer elke 30 minuten. Afspraken moeten door Parro in het agenda-abonnement worden aangeboden; berichten die een datum noemen worden niet automatisch afspraken. Een bestaand, los geïmporteerd Parro-abonnement blijft bestaan: selecteer één van beide agenda's om dubbele weergave te voorkomen.
 
-**Zichtbaarheid:** de agenda volgt de normale Home Assistant-rechten voor entiteiten. De aparte Parro-instellingen voor mededelingen en gesprekken beperken deze agenda niet. Titel, tijd, omschrijving en locatie van de eerstvolgende afspraak staan in agenda-attributen en kunnen daardoor in de Home Assistant-geschiedenis terechtkomen. Abonnementslinks en ruwe iCal-inhoud blijven alleen in het geheugen en worden niet als attributen of diagnostiek gedeeld. Schakel de agenda-entiteit uit als je deze informatie niet in Home Assistant wilt hebben.
+**Zichtbaarheid:** de agenda volgt de normale Home Assistant-rechten voor entiteiten. De aparte Parro-instellingen voor mededelingen en gesprekken beperken deze agenda niet. Titel, tijd, omschrijving en locatie van de eerstvolgende afspraak staan in agenda-attributen; de sensor Volgende schoolafspraak bevat ook tijd, titel en locatie. Deze gegevens kunnen daardoor in de Home Assistant-geschiedenis terechtkomen. Abonnementslinks en ruwe iCal-inhoud blijven alleen in het geheugen en worden niet als attributen of diagnostiek gedeeld. Schakel zowel de agenda-entiteit als de sensor Volgende schoolafspraak uit als je deze informatie niet in Home Assistant wilt hebben.
 
 Een agenda-aanvraag mag maximaal 366 dagen beslaan en 5.000 afspraken opleveren. Maximaal tien abonnementen worden samengevoegd; gelijke afspraken worden ontdubbeld. Onbereikbare of ongeldige agenda-inhoud geeft een fout of een niet-beschikbare agenda, zonder een gedeeltelijke of verouderde lijst als actueel te presenteren.
 
@@ -110,7 +114,7 @@ Home Assistant heeft internettoegang nodig naar `inloggen.parnassys.net`, `rest-
 | Ongelezen mededelingen | Het door Parro geleverde aantal ongelezen mededelingen. Klik om mededelingen te openen. |
 | Ongelezen gesprekken | Aantal chatrooms met ongelezen inhoud; geen aantal afzonderlijke chatberichten. Klik om gesprekken te openen. |
 
-Ontbrekende aantallen zijn onbekend, nooit automatisch nul. Bij een volle begrensde lijst van 100 kinderen of groepen is het totaal onbekend. Bij een mislukte synchronisatie zijn tellers niet beschikbaar. Sensorstates, attributen en diagnostiek bevatten geen berichtteksten, kindnamen, foto's, bijlageadressen of iCal-URL's. Alleen de twee aanklikbare tellers bevatten niet-gevoelige verwijzingen naar de pop-up, het ingestelde account en de gekozen weergave.
+Ontbrekende aantallen zijn onbekend, nooit automatisch nul. Bij een volle begrensde lijst van 100 kinderen of groepen is het totaal onbekend. Bij een mislukte synchronisatie zijn tellers niet beschikbaar. De tellers en diagnostiek bevatten geen berichtteksten, kindnamen, foto's, bijlageadressen of iCal-URL's. Alleen de twee aanklikbare tellers bevatten niet-gevoelige verwijzingen naar de pop-up, het ingestelde account en de gekozen weergave.
 
 ## Leesacties voor automatiseringen
 

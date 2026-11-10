@@ -8,7 +8,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 
-from .api import ParroAuthError, ParroError
 from .entity import ParroEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,19 +44,7 @@ class ParroCalendar(ParroEntity, CalendarEntity):
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
-        try:
-            if self.coordinator.content_auth_failed:
-                raise ParroError("Authentication required")
-            result = await self.coordinator.calendar_feed.async_events(start_date, end_date)
-            if self.coordinator.content_auth_failed:
-                raise ParroError("Authentication required")
-            return result
-        except ParroAuthError:
-            await self.coordinator.async_invalidate_auth()
-            self._entry.async_start_reauth(hass)
-            raise HomeAssistantError("Parro sign-in has expired") from None
-        except ParroError:
-            raise HomeAssistantError("The Parro calendar is unavailable") from None
+        return await self.coordinator.async_get_calendar_events(start_date, end_date)
 
     async def async_update(self) -> None:
         now = dt_util.now()
