@@ -32,7 +32,7 @@ def package_source(tmp_path: Path) -> Path:
                 "name": "Parro",
                 "version": "0.3.0",
                 "config_flow": True,
-                "requirements": ["parro==1.1.0", "ical==14.3.1"],
+                "requirements": ["parro==1.1.0", "ical>=14.1.1"],
                 "codeowners": [],
                 "documentation": "https://github.com/__OWNER__/__REPO__",
                 "issue_tracker": "https://github.com/__OWNER__/__REPO__/issues",

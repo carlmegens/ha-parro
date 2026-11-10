@@ -384,6 +384,7 @@ class ParroFeed:
                 auto_decompress=False,
                 headers={
                     "Accept": self.download_accept,
+                    "Accept-Encoding": "identity",
                     "User-Agent": "HomeAssistant-Parro",
                 },
             )

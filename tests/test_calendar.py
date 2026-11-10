@@ -229,6 +229,8 @@ async def test_native_calendar_service_device_and_auth_failure(
                 blocking=True,
                 return_response=True,
             )
+        assert hass.states.get(entity_id).state == "unavailable"
+        assert "message" not in hass.states.get(entity_id).attributes
         assert config_entry.runtime_data.content_auth_failed
         assert config_entry.runtime_data.calendar_feed._closed
         assert config_entry.runtime_data.feed._closed

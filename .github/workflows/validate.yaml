@@ -37,8 +37,10 @@ jobs:
         include:
           - ha: '2026.8.3'
             plugin: '0.13.357'
+            ical: '14.1.1'
           - ha: '2026.10.4'
             plugin: '0.13.375'
+            ical: '14.3.1'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -48,10 +50,10 @@ jobs:
       - name: Install test dependencies
         run: |
           uv venv
-          printf 'homeassistant==%s\npytest-homeassistant-custom-component==%s\n' '${{ matrix.ha }}' '${{ matrix.plugin }}' > /tmp/parro-test-overrides.txt
+          printf 'homeassistant==%s\npytest-homeassistant-custom-component==%s\nical==%s\n' '${{ matrix.ha }}' '${{ matrix.plugin }}' '${{ matrix.ical }}' > /tmp/parro-test-overrides.txt
           uv pip install -r requirements-test.txt --override /tmp/parro-test-overrides.txt
       - run: uv run --no-project ruff check custom_components tests scripts
-      - run: uv run --no-project pytest
+      - run: uv run --no-project python -m pytest
       - run: uv run --no-project python scripts/prepare_repository.py --check
   browser:
     name: Browser tests

@@ -19,7 +19,7 @@
   "issue_tracker": "https://github.com/carlmegens/ParroHACS/issues",
   "requirements": [
     "parro==1.1.0",
-    "ical==14.3.1"
+    "ical>=14.1.1"
   ],
   "version": "0.4.0"
 }

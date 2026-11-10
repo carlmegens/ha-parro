@@ -6,14 +6,17 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .api import ParroApi
-from .const import CONF_ACCOUNT_ID, CONF_POLL_INTERVAL, CONF_TOKENS, DEFAULT_POLL_INTERVAL
+from .const import CONF_ACCOUNT_ID, CONF_POLL_INTERVAL, CONF_TOKENS, DEFAULT_POLL_INTERVAL, DOMAIN
 from .coordinator import ParroCoordinator
 from .dashboard import async_register_dashboard
 from .frontend import async_setup_frontend
 from .services import async_register_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.CALENDAR]
 type ParroConfigEntry = ConfigEntry[ParroCoordinator]
