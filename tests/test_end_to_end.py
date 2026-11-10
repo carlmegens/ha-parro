@@ -66,6 +66,8 @@ async def test_login_setup_action_refresh_and_unload_against_http_server(hass, c
                 200,
                 json={"items": [{"numberOfUnreadAnnouncements": 2, "numberOfUnreadChatRooms": 1}]},
             )
+        if path == "/rest/v2/calendar/sync":
+            return httpx.Response(200, json={"strings": []})
         if path == "/rest/v2/event":
             assert request.headers["range"] == "items=0-1"
             if request.headers["authorization"] == "Bearer old-access":
@@ -104,9 +106,9 @@ async def test_login_setup_action_refresh_and_unload_against_http_server(hass, c
         entry = result["result"]
         assert entry.unique_id == "123"
         assert entry.state is ConfigEntryState.LOADED
-        assert len(hass.states.async_all()) == 6
+        assert len(hass.states.async_all()) == 7
         assert not any(
-            request.url.path.endswith(("event", "chatroom", "chatmessage", "sync"))
+            request.url.path.endswith(("event", "chatroom", "chatmessage"))
             for request in requests
         )
         with patch.object(hass.config_entries, "async_reload") as reload:

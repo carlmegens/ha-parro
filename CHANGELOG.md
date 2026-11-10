@@ -1,5 +1,12 @@
 # Wijzigingen
 
+## 0.4.0 — schoolagenda en automatische releasecontroles
+
+- Voegt een native, alleen-lezen schoolagenda toe aan het Parro-apparaat, de Home Assistant-agenda en standaard agendakaarten en automatiseringen.
+- Leest accountabonnementen automatisch en verwerkt hele dagen, tijdzones, herhaling, uitzonderingen en geannuleerde afspraken.
+- Houdt abonnementslinks privé en begrenst downloads en agenda-aanvragen. De schoolagenda gebruikt de normale Home Assistant-entiteitsrechten; de aparte Parro-berichtrechten gelden niet voor agenda-inhoud.
+- Voegt GitHub Actions toe voor HACS, Hassfest, Python-tests op twee Home Assistant-versies en de bestaande browsertests.
+
 ## 0.3.1 — Parro-logo
 
 - Vervangt het tijdelijke blauwe P-pictogram door het aangeleverde kleurrijke Parro-logo. De transparante afbeelding wordt lokaal met de integratie meegeleverd.

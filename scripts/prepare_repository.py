@@ -52,6 +52,8 @@ REQUIRED_FILES = {
             "sensor.py",
             "binary_sensor.py",
             "chat_feed.py",
+            "calendar.py",
+            "calendar_feed.py",
             "services.py",
             "services.yaml",
             "diagnostics.py",
@@ -168,7 +170,7 @@ def validate(files: dict[str, bytes], *, release: bool = True) -> None:
         or manifest.get("config_flow") is not True
     ):
         fail("Manifest vereist domain parro, name, version en config_flow true.")
-    if manifest.get("requirements") != ["parro==1.1.0"]:
+    if manifest.get("requirements") != ["parro==1.1.0", "ical==14.3.1"]:
         fail("Deze integratie vereist de vastgezette SDK parro==1.1.0.")
     if release:
         docs = manifest.get("documentation", "")

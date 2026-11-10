@@ -12,6 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .api import ParroApi, ParroAuthError, ParroConnectionError, ParroError
+from .calendar_feed import ParroCalendarFeed
 from .chat_feed import ParroChatFeed
 from .const import CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL, DOMAIN
 from .feed import ParroFeed
@@ -35,6 +36,7 @@ class ParroCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api = api
         self.feed = ParroFeed(hass, api)
         self.chat_feed = ParroChatFeed(hass, api)
+        self.calendar_feed = ParroCalendarFeed(hass, api)
         self.last_success = None
         self.content_auth_failed = False
 
@@ -42,13 +44,17 @@ class ParroCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await super().async_shutdown()
         await self.feed.async_close()
         await self.chat_feed.async_close()
+        await self.calendar_feed.async_close()
 
     async def async_invalidate_auth(self) -> None:
         """Withhold both content sources until reauthentication reloads this entry."""
         self.content_auth_failed = True
+        self.async_update_listeners()
         # Closing sets each store's flag before waiting for active reads. Those
         # reads cannot repopulate it, and HTTP/WS post-checks withhold their result.
-        await asyncio.gather(self.feed.async_close(), self.chat_feed.async_close())
+        await asyncio.gather(
+            self.feed.async_close(), self.chat_feed.async_close(), self.calendar_feed.async_close()
+        )
 
     async def _async_update_data(self) -> dict[str, Any]:
         try:

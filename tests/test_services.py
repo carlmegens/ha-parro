@@ -33,6 +33,7 @@ async def test_actions_registered_without_account(hass):
 @pytest.mark.parametrize("name", SERVICES)
 async def test_bounded_response_and_explicit_account(hass, loaded_account, mock_api, name):
     method = getattr(mock_api, f"async_{name}")
+    method.reset_mock()
     method.return_value = ["private-value-1", "private-value-2", "private-value-3"]
     data = {"config_entry_id": loaded_account.entry_id, "limit": 2}
     if name == "get_messages":

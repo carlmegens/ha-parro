@@ -77,6 +77,11 @@
       "connectivity": {
         "name": "Verbinding"
       }
+    },
+    "calendar": {
+      "school_calendar": {
+        "name": "Schoolagenda"
+      }
     }
   },
   "exceptions": {

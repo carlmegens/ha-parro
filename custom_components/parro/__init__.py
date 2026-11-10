@@ -15,7 +15,7 @@ from .dashboard import async_register_dashboard
 from .frontend import async_setup_frontend
 from .services import async_register_services
 
-PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.CALENDAR]
 type ParroConfigEntry = ConfigEntry[ParroCoordinator]
 
 

@@ -4,11 +4,11 @@ Schoolmededelingen, gesprekken en beschikbare foto's openen vanuit je Parro-appa
 
 [![Open Parro in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=carlmegens&repository=ParroHACS&category=integration)
 
-**Versie 0.3.0 voegt pop-ups op de bestaande Parro-tellers toe.** Een apart dashboard is daarvoor niet nodig. Installatie, aanmelding en de samenvatting met tellers zijn eerder bevestigd; de nieuwe apparaatweergave en gesprekken vereisen hun eigen controles. De [releasechecklist](RELEASE_CHECKLIST.md) houdt uitgevoerde controles bij.
+**Versie 0.4.0 voegt een schoolagenda toe.** Schoolafspraken verschijnen automatisch in de gewone Home Assistant-agenda en zijn bruikbaar op eigen dashboards en in automatiseringen.
 
-## Installeren via HACS
+## Installeren via Marketplace of HACS
 
-Vereist: Home Assistant Core **2026.8.3 of nieuwer**, HACS en een Parro-/ParnasSys-account met de gewenste schoolinformatie. De knop hierboven opent deze repository in je eigen HACS-installatie.
+Vereist: Home Assistant Core **2026.8.3 of nieuwer**, Marketplace (vanaf Home Assistant 2026.11) of HACS en een Parro-/ParnasSys-account met de gewenste schoolinformatie. De knop hierboven opent deze repository in je eigen HACS-installatie.
 
 1. Open **Parro** in HACS en download de integratie. Handmatig toevoegen kan via **Aangepaste repositories**, adres **https://github.com/carlmegens/ParroHACS**, type **Integratie**.
 2. Herstart Home Assistant.
@@ -16,7 +16,7 @@ Vereist: Home Assistant Core **2026.8.3 of nieuwer**, HACS en een Parro-/ParnasS
 4. Kies de juiste identiteit wanneer het account meerdere ParnasSys-identiteiten aanbiedt.
 5. Herlaad de browserpagina en open het Parro-apparaat bij deze integratie.
 
-Dit is een aangepaste HACS-repository. HACS gebruikt de bestanden op `main`; opname in de standaardcatalogus is niet aangevraagd. Zie de [officiële HACS-instructies](https://www.hacs.xyz/docs/faq/custom_repositories/).
+Installeer de nieuwste stabiele GitHub-release. Zolang de repository nog niet in de standaardcatalogus staat, voeg je hem als aangepaste repository toe. Zie de [Marketplace-catalogusuitleg](https://contributors.home-assistant.io/marketplace/guides/catalog/).
 
 ## Lezen vanuit het Parro-apparaat
 
@@ -27,6 +27,16 @@ Dit is een aangepaste HACS-repository. HACS gebruikt de bestanden op `main`; opn
 De twee bestaande tellers blijven gewone tellers. De pop-up haalt de inhoud afzonderlijk op voor het account van dat apparaat. De lijst is begrensd; de weergave toont geen volledig archief en is niet beperkt tot ongelezen inhoud.
 
 De apparaatpagina biedt ook een knop om de gekoppelde Parro-weergave te openen. Die opent het meegeleverde Parro-scherm binnen Home Assistant, zonder een apart dashboard aan te maken. De normale **Configureren**-opties blijven beschikbaar. Een browserherlaadactie na installeren of bijwerken zorgt dat de nieuwe pop-upcode is geladen.
+
+## Schoolagenda
+
+Na installeren of bijwerken en herstarten verschijnt **Parro Schoolagenda** op het Parro-apparaat en onder **Agenda** in de zijbalk. Selecteer deze agenda om de schoolafspraken te zien. Voor een eigen dashboard gebruik je de ingebouwde **Agenda**-kaart met de nieuwe `calendar`-entiteit; voor automatiseringen de gewone agendatriggers of `calendar.get_events`.
+
+De integratie leest de iCal-abonnementen van het aangemelde account automatisch. Hele dagen, tijdzones, terugkerende afspraken, uitzonderingen en annuleringen worden verwerkt. De agenda is alleen-lezen en ververst ongeveer elke 30 minuten. Afspraken moeten door Parro in het agenda-abonnement worden aangeboden; berichten die een datum noemen worden niet automatisch afspraken. Een bestaand, los geïmporteerd Parro-abonnement blijft bestaan: selecteer één van beide agenda's om dubbele weergave te voorkomen.
+
+**Zichtbaarheid:** de agenda volgt de normale Home Assistant-rechten voor entiteiten. De aparte Parro-instellingen voor mededelingen en gesprekken beperken deze agenda niet. Titel, tijd, omschrijving en locatie van de eerstvolgende afspraak staan in agenda-attributen en kunnen daardoor in de Home Assistant-geschiedenis terechtkomen. Abonnementslinks en ruwe iCal-inhoud blijven alleen in het geheugen en worden niet als attributen of diagnostiek gedeeld. Schakel de agenda-entiteit uit als je deze informatie niet in Home Assistant wilt hebben.
+
+Een agenda-aanvraag mag maximaal 366 dagen beslaan en 5.000 afspraken opleveren. Maximaal tien abonnementen worden samengevoegd; gelijke afspraken worden ontdubbeld. Onbereikbare of ongeldige agenda-inhoud geeft een fout of een niet-beschikbare agenda, zonder een gedeeltelijke of verouderde lijst als actueel te presenteren.
 
 ## Optioneel: een kaart op een eigen dashboard
 
@@ -113,7 +123,7 @@ Alle acties vereisen `config_entry_id` van het gekozen Parro-account. De actie-i
 | `parro.get_announcements` | — | Mededelingen met geselecteerde velden en bijlagemetadata. |
 | `parro.get_chatrooms` | — | Gesprekken met identificatie voor een vervolgopvraag. |
 | `parro.get_messages` | `chatroom_id` | Berichten uit één gesprek. |
-| `parro.get_calendar_urls` | — | iCal-URL's; de integratie leest hiermee geen afspraken uit. |
+| `parro.get_calendar_urls` | — | Privé-iCal-abonnementslinks voor beheerders; de schoolagenda leest afspraken automatisch. |
 
 `chatroom_id` is een positief numeriek ID van maximaal 20 cijfers, afkomstig uit `get_chatrooms`. Voorbeeld van een actiestap:
 
@@ -162,8 +172,10 @@ python3.14 -m venv .venv
 .venv/bin/python -m pip install -r requirements-test.txt
 .venv/bin/python -m pytest -q
 .venv/bin/python scripts/prepare_repository.py --check
-.venv/bin/python scripts/prepare_repository.py --local-archive dist/parro-0.3.0-local.zip
+.venv/bin/python scripts/prepare_repository.py --local-archive dist/parro-0.4.0-local.zip
 ```
+
+GitHub Actions voert HACS-validatie, Hassfest, Python-tests op Home Assistant 2026.8.3 en 2026.10.4 en browsertests uit. Alle controles moeten slagen voordat een release wordt gepubliceerd.
 
 De meegeleverde kaart heeft ook [synthetische browsertests en een lokale voorvertoning](tests/frontend/README.md). Deze gebruiken de echte kaartcode met verzonnen accounts, berichten en lokaal getekende foto's. De installatiekaart zelf heeft geen Node-afhankelijkheden.
 

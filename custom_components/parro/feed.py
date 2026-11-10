@@ -215,6 +215,12 @@ class _ImageCache:
 class ParroFeed:
     """Cache feed responses across cards, retaining private source URLs only here."""
 
+    download_accept = "image/jpeg,image/png,image/webp"
+
+    @property
+    def download_limit(self) -> int:
+        return MAX_DOWNLOAD_BYTES
+
     def __init__(self, hass: HomeAssistant, api: ParroApi) -> None:
         self.hass = hass
         self.api = api
@@ -377,7 +383,7 @@ class ParroFeed:
                 trust_env=False,
                 auto_decompress=False,
                 headers={
-                    "Accept": "image/jpeg,image/png,image/webp",
+                    "Accept": self.download_accept,
                     "User-Agent": "HomeAssistant-Parro",
                 },
             )
@@ -403,13 +409,13 @@ class ParroFeed:
                             raise ParroMediaError()
                         if (
                             response.content_length is not None
-                            and response.content_length > MAX_DOWNLOAD_BYTES
+                            and response.content_length > self.download_limit
                         ):
                             raise ParroMediaError()
                         data = bytearray()
                         async for chunk in response.content.iter_chunked(65536):
                             data.extend(chunk)
-                            if len(data) > MAX_DOWNLOAD_BYTES:
+                            if len(data) > self.download_limit:
                                 raise ParroMediaError()
                         return bytes(data)
         except aiohttp.ClientError, TimeoutError, OSError, ValueError:

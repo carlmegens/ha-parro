@@ -16,7 +16,7 @@ async def test_setup_persist_tokens_apply_options_and_unload(hass, config_entry,
         await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.runtime_data.update_interval == timedelta(minutes=30)
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 7
 
     save_tokens = api_class.call_args.args[3]
     tokens = {"access_token": "rotated-access", "refresh_token": "rotated-refresh"}

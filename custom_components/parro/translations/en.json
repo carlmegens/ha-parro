@@ -77,6 +77,11 @@
       "connectivity": {
         "name": "Connection"
       }
+    },
+    "calendar": {
+      "school_calendar": {
+        "name": "School calendar"
+      }
     }
   },
   "exceptions": {

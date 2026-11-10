@@ -28,7 +28,7 @@ async def entity_states(hass, config_entry, mock_api):
 
 
 async def test_compact_states_and_generic_names(hass, config_entry, mock_api, entity_states):
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 7
     for key, expected in (
         ("children_count", "2"),
         ("groups_count", "3"),
@@ -48,7 +48,7 @@ async def test_compact_states_and_generic_names(hass, config_entry, mock_api, en
     mock_api.async_get_announcements.assert_not_awaited()
     mock_api.async_get_chatrooms.assert_not_awaited()
     mock_api.async_get_messages.assert_not_awaited()
-    mock_api.async_get_calendar_urls.assert_not_awaited()
+    mock_api.async_get_calendar_urls.assert_awaited_once()
 
 
 async def test_only_existing_unread_counters_have_public_popup_routing(config_entry, entity_states):
