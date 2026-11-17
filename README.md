@@ -6,7 +6,7 @@ Schoolmededelingen, gesprekken, beschikbare foto's en schoolafspraken openen van
 
 **Beschikbaar in de standaardcatalogus van Marketplace en HACS.** Zoek op **Parro** of gebruik de installatieknop hierboven; een aangepaste repository toevoegen is niet nodig. De [catalogusaanvraag is op 16 november 2026 goedgekeurd en samengevoegd](https://github.com/hacs/default/pull/13845). Dit is een onofficiële community-integratie voor Parro.
 
-**Versie 0.4.3 voegt een tab Agenda toe aan het Parro-scherm, naast Mededelingen en Gesprekken.** Schoolafspraken verschijnen automatisch in de gewone Home Assistant-agenda en zijn bruikbaar op eigen dashboards en in automatiseringen.
+**Versie 1.0.0 is de eerste stabiele release.** Mededelingen, gesprekken, foto’s en de schoolagenda zijn beschikbaar vanuit het Parro-apparaat en het meegeleverde Parro-scherm. Schoolafspraken werken ook in de gewone Home Assistant-agenda, op eigen dashboards en in automatiseringen.
 
 ## Installeren via Marketplace of HACS
 
@@ -21,6 +21,14 @@ Vereist: Home Assistant Core **2026.8.3 of nieuwer**, Marketplace (vanaf Home As
 **Parro nog niet zichtbaar?** Vernieuw de catalogus of gebruik de installatieknop hierboven om de repository rechtstreeks te openen.
 
 Heb je Parro al via een aangepaste repository geïnstalleerd? Je hoeft niets opnieuw te installeren: de bestaande installatie blijft updates ontvangen via Marketplace of HACS.
+
+## Versies en compatibiliteit
+
+Versie **1.0.0** bouwt voort op de functionaliteit van 0.4.3. Bijwerken vereist geen nieuwe aanmelding, gewijzigde kaartconfiguratie of migratie van entiteiten. Installeer de update via Marketplace of HACS en herstart Home Assistant.
+
+Binnen **1.x** behouden we de bestaande entiteit-identiteiten en de gedocumenteerde acties, API-antwoorden en kaartinstellingen. Foutcorrecties krijgen een patchversie (bijvoorbeeld 1.0.1); compatibele uitbreidingen een minorversie (bijvoorbeeld 1.1.0). Incompatibele wijzigingen aan deze interfaces krijgen een nieuwe hoofdversie en migratie-instructies. De minimale Home Assistant-versie staat per release in `hacs.json`; wijzigingen daarin vermelden we in de releasenotities.
+
+De beschreven grenzen voor geschiedenis, bijlagen, agenda-inhoud en aanmelding blijven gelden. De integratie is afhankelijk van de Parro-dienst en ondersteunt alleen lezen.
 
 ## Lezen vanuit het Parro-apparaat
 
@@ -182,7 +190,7 @@ python3.14 -m venv .venv
 .venv/bin/python -m pip install -r requirements-test.txt
 .venv/bin/python -m pytest -q
 .venv/bin/python scripts/prepare_repository.py --check
-.venv/bin/python scripts/prepare_repository.py --local-archive dist/parro-0.4.0-local.zip
+.venv/bin/python scripts/prepare_repository.py --local-archive dist/parro-1.0.0-local.zip
 ```
 
 GitHub Actions voert HACS-validatie, Hassfest, Python-tests op Home Assistant 2026.8.3 en 2026.10.4 en browsertests uit. Alle controles moeten slagen voordat een release wordt gepubliceerd.

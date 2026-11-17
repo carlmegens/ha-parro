@@ -1,5 +1,12 @@
 # Wijzigingen
 
+## 1.0.0 — eerste stabiele release
+
+- Markeert de bestaande functionaliteit van 0.4.3 als stabiele basis: mededelingen, gesprekken, beschikbare foto’s, schoolagenda, apparaat-pop-ups en optionele dashboardkaart.
+- Legt de compatibiliteitsafspraak voor entiteit-identiteiten, gedocumenteerde acties, API-antwoorden en kaartinstellingen vast in de README.
+- Behoudt de bestaande configuratie, entiteiten, toegangsrechten en frontend. Bijwerken vanuit 0.4.3 vereist geen nieuwe aanmelding of migratie; Home Assistant herstarten volstaat.
+- Bevat de installatie-instructies voor de goedgekeurde Marketplace-/HACS-catalogus. De bestaande functionele beperkingen blijven gedocumenteerd.
+
 ## 0.4.3 — Agenda-tab in het Parro-scherm
 
 - Voegt Agenda toe naast Mededelingen en Gesprekken, met de bestaande lijst van komende schoolafspraken, vernieuwen en een link naar de volledige agenda.
