@@ -25,6 +25,7 @@ ROOT_FILES = {
     "hacs.json",
     ".gitignore",
     "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
     "CHANGELOG.md",
     "RELEASE_CHECKLIST.md",
 }

@@ -8,7 +8,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 
+from .api import ParroAuthError, ParroError
 from .entity import ParroEntity
+from .family import ParroChildEntity, async_add_children
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=15)
@@ -16,12 +18,16 @@ PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
+    async_add_children(entry, async_add_entities, ParroChildCalendar, update_before_add=True)
     async_add_entities([ParroCalendar(entry.runtime_data, entry)], update_before_add=True)
 
 
 class ParroCalendar(ParroEntity, CalendarEntity):
     """A single account calendar, attached to the existing Parro device."""
 
+    _unrecorded_attributes = frozenset(
+        {"message", "description", "location", "start_time", "end_time"}
+    )
     _attr_should_poll = True
 
     def __init__(self, coordinator, entry):
@@ -58,3 +64,43 @@ class ParroCalendar(ParroEntity, CalendarEntity):
             self._calendar_available = False
         else:
             self._calendar_available = True
+
+
+class ParroChildCalendar(ParroChildEntity, CalendarEntity):
+    """Only appointments explicitly linked by Parro to this child."""
+
+    _attr_should_poll = True
+
+    def __init__(self, coordinator, entry, child_id):
+        super().__init__(coordinator, entry, child_id, "child_calendar")
+        self._events = []
+        self._calendar_available = False
+
+    @property
+    def available(self):
+        return super().available and self._calendar_available
+
+    @property
+    def event(self):
+        if not self.available:
+            return None
+        return next((e for e in self._events if e.end_datetime_local > dt_util.now()), None)
+
+    async def async_get_events(self, hass, start_date, end_date):
+        try:
+            return await self.coordinator.family.async_events(self.child_id, start_date, end_date)
+        except ParroAuthError:
+            await self.coordinator.async_invalidate_auth()
+            self.coordinator.config_entry.async_start_reauth(hass)
+            raise HomeAssistantError("Parro sign-in has expired") from None
+        except ParroError:
+            raise HomeAssistantError("The child calendar is unavailable") from None
+
+    async def async_update(self):
+        now = dt_util.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        try:
+            self._events = await self.async_get_events(self.hass, now, now + timedelta(days=365))
+            self._calendar_available = True
+        except HomeAssistantError:
+            self._events = []
+            self._calendar_available = False

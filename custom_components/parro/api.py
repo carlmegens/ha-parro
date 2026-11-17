@@ -1,4 +1,4 @@
-"""Bounded, read-only adapter around parro 1.1.0.
+"""Bounded adapter around parro 1.1.0 with explicitly guarded replies.
 
 The CLI SDK normally writes OAuth tokens to the user's home directory. Each
 adapter owns a separately loaded SDK module whose storage hooks are disabled;
@@ -727,6 +727,109 @@ class ParroApi:
             return urls[:limit]
 
         return await self._async_call(calendar)
+
+    async def async_get_family(self):
+        """Return bounded child/group records only when both collections are complete."""
+        from .models import ParroChild, ParroGroup, parse_items
+
+        def fetch(client):
+            children = client.get_children()
+            groups = client.get_groups()
+            if not client.complete["/child"] or not client.complete["/group"]:
+                raise ParroError("The Parro family collection is incomplete")
+            return (
+                {str(c.child_id): c for c in parse_items(children, ParroChild.from_api)},
+                {str(g.group_id): g for g in parse_items(groups, ParroGroup.from_api)},
+            )
+
+        return await self._async_call(fetch)
+
+    async def async_get_child_events(self, start, end):
+        """Fetch native calendar rows, which carry explicit child associations."""
+        from datetime import UTC, timedelta
+
+        from .models import events_from_rows
+
+        def fetch(client):
+            rows = []
+            for offset in range(0, 2000, 50):
+                response = client._client.get(
+                    "/event",
+                    params={
+                        "dtype": "event.RCalendarItemEventPrimer",
+                        "sort": "desc-stream",
+                        "sortDateSince": (start - timedelta(days=1)).astimezone(UTC).isoformat(),
+                    },
+                    headers={"Range": f"items={offset}-{offset + 49}"},
+                )
+                if response.status_code == 416:
+                    return events_from_rows(rows)
+                response.raise_for_status()
+                page = _items(response.json())
+                rows.extend(page[:50])
+                if len(page) < 50:
+                    return events_from_rows(rows)
+            raise ParroError("The Parro calendar query exceeded its limit")
+
+        return await self._async_call(fetch)
+
+    async def async_get_activity(self):
+        """Read list metadata, never open a conversation or mark a message as read."""
+        from .models import ParroAccount
+
+        def fetch(client):
+            account = ParroAccount.from_api(client.get_account())
+            if account is None:
+                raise ParroError("Parro returned no account identity")
+            announcements = client._items_paged(
+                "/event", MAX_LIMIT, dtype="event.RAnnouncementEventPrimer"
+            )
+            rooms = client._items_paged("/chatroom", MAX_LIMIT)
+            return announcements, rooms, account.own_ids
+
+        return await self._async_call(fetch)
+
+    async def async_send_reply(self, chatroom_id: str, text: str):
+        """Recheck membership and room policy, then attempt exactly one POST."""
+        from .models import ParroChatRoom
+
+        if not re.fullmatch(r"[1-9][0-9]{0,19}", chatroom_id):
+            raise ParroError("Invalid conversation ID")
+
+        def send(client):
+            rooms = client._items_paged("/chatroom", MAX_LIMIT)
+            room = next((ParroChatRoom.from_api(r) for r in rooms if _id(r) == chatroom_id), None)
+            if room is None or not room.can_reply:
+                raise ParroError("Replies are not available for this conversation")
+            media_type = "application/vnd.topicus.geon+json;version=224"
+            try:
+                response = client._client.post(
+                    f"/chatroom/{chatroom_id}/chatmessage",
+                    headers={"Content-Type": media_type, "Accept": media_type},
+                    json={
+                        "items": [
+                            {
+                                "dtype": "chat.RChatTextMessage",
+                                "links": [],
+                                "deleted": False,
+                                "text": text,
+                                "allRead": False,
+                            }
+                        ]
+                    },
+                    follow_redirects=False,
+                )
+            except httpx.RequestError:
+                raise ParroError(
+                    "Delivery could not be confirmed; check Parro before retrying"
+                ) from None
+            # Never let an HTTPStatusError escape: the read adapter retries 401s.
+            if response.status_code == 401:
+                raise ParroAuthError("Parro sign-in has expired")
+            if not 200 <= response.status_code < 300:
+                raise ParroError("Delivery could not be confirmed; check Parro before retrying")
+
+        await self._async_call(send)
 
     async def async_close(self) -> None:
         """Wait for in-flight HTTP calls before closing the client, once."""

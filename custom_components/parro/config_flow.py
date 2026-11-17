@@ -20,9 +20,14 @@ from .api import (
 )
 from .const import (
     CONF_ACCOUNT_ID,
+    CONF_ACTIVITY_EVENTS,
+    CONF_ALLOW_REPLIES,
     CONF_CHAT_VIEWERS,
+    CONF_CHILD_ENTITIES,
     CONF_DASHBOARD_VIEWERS,
+    CONF_PHOTO_ENTITIES,
     CONF_POLL_INTERVAL,
+    CONF_REPLY_ROOMS,
     CONF_TOKENS,
     DEFAULT_POLL_INTERVAL,
     DOMAIN,
@@ -157,6 +162,18 @@ class ParroOptionsFlow(config_entries.OptionsFlow):
                     errors[key] = "invalid_viewers"
                 else:
                     data[key] = list(dict.fromkeys(viewers))
+            rooms = data.get(CONF_REPLY_ROOMS, [])
+            import re
+
+            if (
+                not isinstance(rooms, list)
+                or len(rooms) > 50
+                or any(
+                    not isinstance(room, str) or not re.fullmatch(r"[1-9][0-9]{0,19}", room)
+                    for room in rooms
+                )
+            ):
+                errors[CONF_REPLY_ROOMS] = "invalid_rooms"
             if not errors:
                 return self.async_create_entry(title="", data=data)
         return self.async_show_form(
@@ -170,6 +187,28 @@ class ParroOptionsFlow(config_entries.OptionsFlow):
                         ),
                     ): vol.All(
                         vol.Coerce(int), vol.Range(min=MIN_POLL_INTERVAL, max=MAX_POLL_INTERVAL)
+                    ),
+                    **{
+                        vol.Optional(
+                            key, default=self.config_entry.options.get(key, False)
+                        ): selector.BooleanSelector()
+                        for key in (
+                            CONF_CHILD_ENTITIES,
+                            CONF_PHOTO_ENTITIES,
+                            CONF_ACTIVITY_EVENTS,
+                            CONF_ALLOW_REPLIES,
+                        )
+                    },
+                    vol.Optional(
+                        CONF_REPLY_ROOMS,
+                        default=self.config_entry.options.get(CONF_REPLY_ROOMS, []),
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[],
+                            multiple=True,
+                            custom_value=True,
+                            mode=selector.SelectSelectorMode.DROPDOWN,
+                        )
                     ),
                     **{
                         vol.Optional(

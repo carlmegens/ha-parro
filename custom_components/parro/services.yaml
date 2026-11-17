@@ -63,3 +63,20 @@ get_calendar_urls:
           max: 50
           step: 1
           mode: box
+
+send_reply:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: parro
+    chatroom_id:
+      required: true
+      selector:
+        text:
+    message:
+      required: true
+      selector:
+        text:
+          multiline: true

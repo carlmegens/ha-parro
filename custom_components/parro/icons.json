@@ -18,11 +18,38 @@
       },
       "next_appointment": {
         "default": "mdi:calendar-clock"
+      },
+      "child_groups": {
+        "default": "mdi:account-group"
       }
     },
     "binary_sensor": {
       "connectivity": {
         "default": "mdi:cloud-check-outline"
+      }
+    },
+    "calendar": {
+      "child_calendar": {
+        "default": "mdi:calendar"
+      },
+      "school_calendar": {
+        "default": "mdi:calendar"
+      }
+    },
+    "image": {
+      "profile_photo": {
+        "default": "mdi:account-circle"
+      },
+      "recent_photo": {
+        "default": "mdi:image"
+      }
+    },
+    "event": {
+      "new_announcement": {
+        "default": "mdi:bullhorn"
+      },
+      "new_message": {
+        "default": "mdi:message-badge-outline"
       }
     }
   },
@@ -38,6 +65,9 @@
     },
     "get_calendar_urls": {
       "service": "mdi:download"
+    },
+    "send_reply": {
+      "service": "mdi:send"
     }
   }
 }

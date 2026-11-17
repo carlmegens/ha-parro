@@ -39,20 +39,31 @@
     "step": {
       "init": {
         "title": "Parro settings",
-        "description": "Choose how often Home Assistant updates the counters (15–240 minutes). Announcements and photos are fetched when you open the card. Administrators always have access; select any additional users below.",
+        "description": "Configure polling and access. New features default to off. Child and image entities use normal Home Assistant access, not the Parro card user lists. New activity is detected during polling.",
         "data": {
           "poll_interval": "Polling interval (minutes)",
           "dashboard_viewers": "Access to announcements and photos",
-          "chat_viewers": "Family users with access to conversations"
+          "chat_viewers": "Family users with access to conversations",
+          "child_entities": "Create entities per child",
+          "photo_entities": "Expose photos as Home Assistant image entities",
+          "activity_events": "Enable events for new announcements and chat messages",
+          "allow_replies": "Allow sending replies (administrators and automations)",
+          "reply_rooms": "Conversation IDs allowed for replies"
         },
         "data_description": {
           "dashboard_viewers": "These users may view announcements and photos from this Parro account. This does not grant access to private conversations.",
-          "chat_viewers": "These users may view direct conversations and their photos from this Parro account. Grant this separately from announcement access."
+          "chat_viewers": "These users may view direct conversations and their photos from this Parro account. Grant this separately from announcement access.",
+          "child_entities": "A calendar and group sensor per child; names are stored in the device registry.",
+          "photo_entities": "Profile photos (with child entities) and six recent announcement photos. Users with entity access can view these images. Do not share image URLs.",
+          "activity_events": "IDs and timestamps only. Enabling or restarting first establishes a silent baseline.",
+          "allow_replies": "Through parro.send_reply; direct and family conversations only. This option sends nothing automatically.",
+          "reply_rooms": "Use IDs from parro.get_chatrooms. Each conversation must be explicitly allowed."
         }
       }
     },
     "error": {
-      "invalid_viewers": "Select only active Home Assistant users from the list."
+      "invalid_viewers": "Select only active Home Assistant users from the list.",
+      "invalid_rooms": "Enter up to 50 valid numeric conversation IDs."
     }
   },
   "entity": {
@@ -74,6 +85,9 @@
       },
       "next_appointment": {
         "name": "Next school appointment"
+      },
+      "child_groups": {
+        "name": "Groups"
       }
     },
     "binary_sensor": {
@@ -84,6 +98,31 @@
     "calendar": {
       "school_calendar": {
         "name": "School calendar"
+      },
+      "child_calendar": {
+        "name": "School calendar"
+      }
+    },
+    "image": {
+      "profile_photo": {
+        "name": "Profile photo"
+      },
+      "recent_photo": {
+        "name": "Recent photo {number}"
+      }
+    },
+    "event": {
+      "new_announcement": {
+        "name": "New announcement",
+        "event_types": {
+          "new_announcement": "New announcement"
+        }
+      },
+      "new_message": {
+        "name": "New chat message",
+        "event_types": {
+          "new_message": "New chat message"
+        }
       }
     }
   },
@@ -159,6 +198,22 @@
         "limit": {
           "name": "Limit",
           "description": "Maximum returned items (1–50); this is not a complete export."
+        }
+      }
+    },
+    "send_reply": {
+      "name": "Send reply",
+      "description": "Send a text reply to an explicitly allowed conversation. Disabled by default. Administrators and automations only. Check Parro on an uncertain result; do not retry automatically.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Account"
+        },
+        "chatroom_id": {
+          "name": "Conversation ID"
+        },
+        "message": {
+          "name": "Message",
+          "description": "1–1000 characters, at most 20 lines."
         }
       }
     }

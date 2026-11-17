@@ -33,14 +33,24 @@ class ParroCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 minutes=entry.options.get(CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL)
             ),
         )
+        from .const import FEATURE_OPTIONS
+
+        self.feature_options = tuple(entry.options.get(key, False) for key in FEATURE_OPTIONS)
         self.api = api
         self.feed = ParroFeed(hass, api)
         self.chat_feed = ParroChatFeed(hass, api)
         self.calendar_feed = ParroCalendarFeed(hass, api)
+        from .family import FamilyData
+
+        self.family = FamilyData(self)
+        from .replies import ReplyGuard
+
+        self.replies = ReplyGuard(self)
         self.last_success = None
         self.content_auth_failed = False
 
     async def async_shutdown(self) -> None:
+        self.family.close()
         await super().async_shutdown()
         await self.feed.async_close()
         await self.chat_feed.async_close()
@@ -49,6 +59,7 @@ class ParroCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def async_invalidate_auth(self) -> None:
         """Withhold both content sources until reauthentication reloads this entry."""
         self.content_auth_failed = True
+        self.family.close()
         self.async_update_listeners()
         # Closing sets each store's flag before waiting for active reads. Those
         # reads cannot repopulate it, and HTTP/WS post-checks withhold their result.
@@ -75,12 +86,17 @@ class ParroCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         try:
             data = await self.api.async_fetch_summary()
+            await self.family.async_update()
         except ParroAuthError as err:
             await self.async_invalidate_auth()
             raise ConfigEntryAuthFailed("Parro sign-in has expired") from err
         except ParroConnectionError as err:
+            self.family.available = False
+            self.family.activity = []
             raise UpdateFailed("Unable to reach Parro") from err
         except ParroError as err:
+            self.family.available = False
+            self.family.activity = []
             raise UpdateFailed("Parro returned an unsupported response") from err
         self.last_success = dt_util.utcnow()
         return data

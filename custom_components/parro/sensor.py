@@ -14,6 +14,7 @@ from homeassistant.util import dt as dt_util
 
 from .coordinator import ParroCoordinator
 from .entity import ParroEntity
+from .family import ParroChildEntity, async_add_children
 
 SCAN_INTERVAL = timedelta(minutes=15)
 PARALLEL_UPDATES = 1
@@ -32,6 +33,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add compact counters and the human-readable next appointment."""
+    async_add_children(entry, async_add_entities, ParroGroupSensor)
     async_add_entities(
         [ParroCountSensor(entry.runtime_data, entry, description) for description in SENSORS]
         + [ParroLastSuccessSensor(entry.runtime_data, entry)]
@@ -96,6 +98,7 @@ class ParroLastSuccessSensor(ParroEntity, SensorEntity):
 class ParroNextAppointmentSensor(ParroEntity, SensorEntity):
     """Display a date instead of the calendar's technical on/off state."""
 
+    _unrecorded_attributes = frozenset({"summary", "location", "end_time", "all_day"})
     _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_should_poll = True
 
@@ -176,3 +179,26 @@ class ParroNextAppointmentSensor(ParroEntity, SensorEntity):
                 self.hass, update_next, timedelta(minutes=1), cancel_on_shutdown=True
             )
         )
+
+
+class ParroGroupSensor(ParroChildEntity, SensorEntity):
+    """Class names, with a bounded list when a child belongs to several groups."""
+
+    def __init__(self, coordinator, entry, child_id):
+        super().__init__(coordinator, entry, child_id, "child_groups")
+
+    @property
+    def _groups(self):
+        return sorted(
+            g.name
+            for g in self.coordinator.family.groups.values()
+            if int(self.child_id) in g.child_ids
+        )
+
+    @property
+    def native_value(self):
+        return ", ".join(self._groups)[:255] or None
+
+    @property
+    def extra_state_attributes(self):
+        return {"groups": self._groups} if self.available else {}

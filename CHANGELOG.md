@@ -1,5 +1,17 @@
 # Wijzigingen
 
+## 1.1.0b1 — 2026-11-17 (pre-release)
+
+This is an opt-in test release. New features have synthetic integration tests but have not yet been validated against a real school account. The stable release remains 1.0.0.
+
+- Opt-in child devices with a group sensor, native child calendar and profile photo.
+- Six opt-in native image slots for recent announcement photos.
+- Minimal event entities and automation events for newly observed announcements and chat activity; silent startup baseline.
+- Administrator/automation reply action, disabled by default, with explicit room allowlist, server-side room policy checks and durable attempt limits. No automatic delivery retries.
+- Exclude calendar text attributes from new Recorder storage.
+- Document shared-entity visibility, message delivery limitations, third-party attribution and trademarks.
+- Existing account entities, read actions and dashboard configuration remain compatible.
+
 ## 1.0.0 — eerste stabiele release
 
 - Markeert de bestaande functionaliteit van 0.4.3 als stabiele basis: mededelingen, gesprekken, beschikbare foto’s, schoolagenda, apparaat-pop-ups en optionele dashboardkaart.

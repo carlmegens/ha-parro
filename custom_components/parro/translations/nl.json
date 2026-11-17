@@ -39,20 +39,31 @@
     "step": {
       "init": {
         "title": "Parro-instellingen",
-        "description": "Kies hoe vaak Home Assistant de tellers bijwerkt (15–240 minuten). Mededelingen en foto’s worden opgehaald wanneer je de kaart opent. Beheerders hebben altijd toegang; selecteer hieronder eventuele andere gebruikers.",
+        "description": "Stel het verversingsinterval en de toegang in. Nieuwe functies staan standaard uit. Kind-entiteiten en foto’s gebruiken de normale Home Assistant-toegang, niet de gebruikerslijst van de Parro-kaart. Meldingen worden bij het verversen ontdekt.",
         "data": {
           "poll_interval": "Ophaalinterval (minuten)",
           "dashboard_viewers": "Toegang tot mededelingen en foto’s",
-          "chat_viewers": "Gezinsgebruikers met toegang tot gesprekken"
+          "chat_viewers": "Gezinsgebruikers met toegang tot gesprekken",
+          "child_entities": "Entiteiten per kind aanmaken",
+          "photo_entities": "Foto’s als Home Assistant-afbeeldingen beschikbaar maken",
+          "activity_events": "Gebeurtenissen voor nieuwe mededelingen en chatberichten",
+          "allow_replies": "Antwoorden toestaan (beheerders en automatiseringen)",
+          "reply_rooms": "Gespreks-ID’s waarvoor antwoorden zijn toegestaan"
         },
         "data_description": {
           "dashboard_viewers": "Deze gebruikers mogen mededelingen en foto’s van dit Parro-account bekijken. Dit geeft geen toegang tot privégesprekken.",
-          "chat_viewers": "Deze gebruikers mogen directe gesprekken en bijbehorende foto’s van dit Parro-account bekijken. Selecteer dit apart van toegang tot mededelingen."
+          "chat_viewers": "Deze gebruikers mogen directe gesprekken en bijbehorende foto’s van dit Parro-account bekijken. Selecteer dit apart van toegang tot mededelingen.",
+          "child_entities": "Eigen agenda en groepssensor per kind; namen worden opgeslagen in het apparatenregister.",
+          "photo_entities": "Profielfoto’s (met kind-entiteiten) en zes recente mededelingsfoto’s. Gebruikers met toegang tot deze entiteiten kunnen de foto’s bekijken. Deel afbeeldingslinks niet.",
+          "activity_events": "Alleen ID’s en tijdstippen. Na inschakelen of herstarten ontstaat eerst een stille beginstand.",
+          "allow_replies": "Via de actie parro.send_reply; alleen directe- en familiegesprekken. Er wordt niets automatisch verstuurd door deze optie.",
+          "reply_rooms": "Gebruik de ID’s uit parro.get_chatrooms. Elk gesprek moet afzonderlijk worden toegestaan."
         }
       }
     },
     "error": {
-      "invalid_viewers": "Selecteer alleen actieve Home Assistant-gebruikers uit de lijst."
+      "invalid_viewers": "Selecteer alleen actieve Home Assistant-gebruikers uit de lijst.",
+      "invalid_rooms": "Vul maximaal 50 geldige numerieke gespreks-ID’s in."
     }
   },
   "entity": {
@@ -74,6 +85,9 @@
       },
       "next_appointment": {
         "name": "Volgende schoolafspraak"
+      },
+      "child_groups": {
+        "name": "Groepen"
       }
     },
     "binary_sensor": {
@@ -84,6 +98,31 @@
     "calendar": {
       "school_calendar": {
         "name": "Schoolagenda"
+      },
+      "child_calendar": {
+        "name": "Schoolagenda"
+      }
+    },
+    "image": {
+      "profile_photo": {
+        "name": "Profielfoto"
+      },
+      "recent_photo": {
+        "name": "Recente foto {number}"
+      }
+    },
+    "event": {
+      "new_announcement": {
+        "name": "Nieuwe mededeling",
+        "event_types": {
+          "new_announcement": "Nieuwe mededeling"
+        }
+      },
+      "new_message": {
+        "name": "Nieuw chatbericht",
+        "event_types": {
+          "new_message": "Nieuw chatbericht"
+        }
       }
     }
   },
@@ -159,6 +198,22 @@
         "limit": {
           "name": "Maximum",
           "description": "Maximum aantal resultaten (1–50); dit is geen volledige export."
+        }
+      }
+    },
+    "send_reply": {
+      "name": "Antwoord versturen",
+      "description": "Stuur een tekstantwoord naar een expliciet toegestaan gesprek. Standaard uit. Alleen beheerders en automatiseringen. Controleer Parro bij een onzekere uitkomst; niet automatisch opnieuw proberen.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Account"
+        },
+        "chatroom_id": {
+          "name": "Gespreks-ID"
+        },
+        "message": {
+          "name": "Bericht",
+          "description": "1–1000 tekens, maximaal 20 regels."
         }
       }
     }

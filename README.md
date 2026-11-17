@@ -28,7 +28,7 @@ Versie **1.0.0** bouwt voort op de functionaliteit van 0.4.3. Bijwerken vereist 
 
 Binnen **1.x** behouden we de bestaande entiteit-identiteiten en de gedocumenteerde acties, API-antwoorden en kaartinstellingen. Foutcorrecties krijgen een patchversie (bijvoorbeeld 1.0.1); compatibele uitbreidingen een minorversie (bijvoorbeeld 1.1.0). Incompatibele wijzigingen aan deze interfaces krijgen een nieuwe hoofdversie en migratie-instructies. De minimale Home Assistant-versie staat per release in `hacs.json`; wijzigingen daarin vermelden we in de releasenotities.
 
-De beschreven grenzen voor geschiedenis, bijlagen, agenda-inhoud en aanmelding blijven gelden. De integratie is afhankelijk van de Parro-dienst en ondersteunt alleen lezen.
+De beschreven grenzen voor geschiedenis, bijlagen, agenda-inhoud en aanmelding blijven gelden. De integratie is afhankelijk van de Parro-dienst. Zij leest standaard alleen; de optionele antwoordfunctie vereist afzonderlijk inschakelen en een lijst met toegestane gesprekken.
 
 ## Lezen vanuit het Parro-apparaat
 
@@ -39,6 +39,61 @@ De beschreven grenzen voor geschiedenis, bijlagen, agenda-inhoud en aanmelding b
 De twee bestaande tellers blijven gewone tellers. De pop-up haalt de inhoud afzonderlijk op voor het account van dat apparaat. De lijst is begrensd; de weergave toont geen volledig archief en is niet beperkt tot ongelezen inhoud.
 
 De apparaatpagina biedt ook een knop om de gekoppelde Parro-weergave te openen. Die opent het meegeleverde Parro-scherm binnen Home Assistant, zonder een apart dashboard aan te maken. De normale **Configureren**-opties blijven beschikbaar. Een browserherlaadactie na installeren of bijwerken zorgt dat de nieuwe pop-upcode is geladen.
+
+## Testversie 1.1.0b1: optionele functies per gezin
+
+**Deze functies zitten in de testrelease 1.1.0b1, nog niet in de stabiele 1.0.0.** Open Parro in Marketplace/HACS, kies via het repositorymenu opnieuw downloaden en toon test-/bètaversies als die optie beschikbaar is. Selecteer expliciet `v1.1.0b1` en herstart Home Assistant. Gebruik anders de installatie-ZIP van de [testrelease](https://github.com/carlmegens/ha-parro/releases/tag/v1.1.0b1). Voor teruggaan kies je opnieuw 1.0.0. De nieuwe entiteiten worden dan niet meer aangeboden; eigen kaarten die ernaar verwijzen moet je zelf aanpassen.
+
+De uitbreiding is met verzonnen gegevens getest. De kindkoppelingen, profielfoto’s en daadwerkelijke aflevering van antwoorden zijn nog niet met een echt schoolaccount bevestigd. Er zijn tijdens de ontwikkeling geen berichten naar leerkrachten verzonden. Test antwoorden alleen met een bewust gekozen bericht; gebruik de officiële Parro-app om aflevering te controleren.
+
+Ga naar **Instellingen → Apparaten en diensten → Parro → Configureren**. De nieuwe opties staan standaard uit, ook na bijwerken. Je bestaande tellers, agenda, kaarten en toegangsinstellingen blijven werken.
+
+| Optie | Wat beschikbaar komt |
+| --- | --- |
+| Entiteiten per kind | Een eigen apparaat met voornaam, groepssensor en schoolagenda. |
+| Foto-entiteiten | Zes vaste `image`-entiteiten met recente mededelingsfoto’s. Met kind-entiteiten ook een profielfoto per kind. |
+| Gebeurtenissen | Twee `event`-entiteiten en gebeurtenissen `parro_new_announcement` en `parro_new_message` voor automatiseringen. |
+| Antwoorden toestaan | De actie `parro.send_reply`, alleen voor expliciet toegestane directe- en familiegesprekken. |
+
+**Per kind:** de agenda gebruikt Parro’s expliciete kindkoppelingen in de agenda-API. Afspraken zonder kindkoppeling blijven alleen in de bestaande accountagenda zichtbaar; er wordt niet op namen of groepstitels gegokt. De accountagenda blijft de bestaande iCal-bron gebruiken. Nieuwe kinderen worden bij een volgende verversing ontdekt; verdwenen kinderen worden niet beschikbaar. Oude apparaten worden niet automatisch verwijderd, zodat eigen dashboardconfiguratie niet verloren gaat. Groepsnamen kunnen meerdere groepen bevatten. Een ontbrekende profielfoto blijft niet beschikbaar.
+
+**Foto’s op een dashboard:** voeg een ingebouwde **Afbeelding-entiteit / Picture entity**-kaart toe en kies een Parro-afbeelding. Er zijn maximaal zes recente foto’s uit de laatste vijftig mededelingen; de vaste posities wisselen met nieuwe inhoud en vormen geen archief. Foto’s uit privégesprekken blijven uitsluitend in de afgeschermde gesprekskaart. Foto’s worden op aanvraag geladen, verkleind tot maximaal 1600 pixels en opnieuw opgeslagen als JPEG zonder oorspronkelijke metadata. Externe foto-URL’s staan niet in entiteitsattributen.
+
+**Zichtbaarheid:** de nieuwe kind-, agenda-, groeps- en foto-entiteiten vallen onder normale Home Assistant-toegang, niet onder de aparte gebruikerslijsten voor de Parro-kaart. Voornaam en entiteitsnamen blijven in de lokale registers staan. Groepsnamen zijn sensorwaarden en kunnen in de geschiedenis worden opgeslagen. Home Assistant gebruikt tokenlinks voor afbeelding-entiteiten; iemand met zo’n link kan de afbeelding mogelijk bekijken. Deel die links niet. Schakel de foto-optie uit om verdere levering te blokkeren. Reeds bekeken of gedownloade foto’s kunnen niet worden teruggehaald.
+
+### Meldingen automatiseren
+
+Nieuwe activiteit wordt bij het ingestelde verversingsinterval ontdekt, niet rechtstreeks gepusht. Na inschakelen, herladen of herstarten ontstaat eerst een stille beginstand: bestaande berichten geven geen melding. Dit is geen volledige berichtenstroom: de laatste vijftig mededelingen en vijftig gesprekken worden bekeken; per gesprek is alleen het laatste bericht bekend. Meerdere berichten tussen twee controles kunnen daardoor één gebeurtenis opleveren. Eigen antwoorden worden overgeslagen wanneer de afzender als eigen identiteit bekend is.
+
+Elke gebeurtenis bevat uitsluitend `config_entry_id`, `item_id` en `published_at`. Bij chatberichten is `item_id` het gespreks-ID. Er worden geen namen, berichtteksten of fotolinks meegestuurd. Gebruik je eigen account-ID in dit voorbeeld:
+
+```yaml
+alias: Parro nieuwe mededeling
+triggers:
+  - trigger: event
+    event_type: parro_new_announcement
+    event_data:
+      config_entry_id: VUL_JE_ACCOUNT_ID_IN
+actions:
+  - action: persistent_notification.create
+    data:
+      title: Parro
+      message: Er is een nieuwe schoolmededeling beschikbaar.
+```
+
+Voor chatberichten gebruik je `parro_new_message`. De `event`-entiteiten kun je ook als statustrigger gebruiken, met een controle dat de vorige waarde niet `unknown` of `unavailable` was. Gebeurtenissen zijn voor automatiseringen beschikbaar en vallen niet onder de Parro-kaartrechten.
+
+### Optioneel antwoorden
+
+1. Haal het gespreks-ID op met `parro.get_chatrooms`.
+2. Zet **Antwoorden toestaan** aan en voeg het ID toe aan **Gespreks-ID’s waarvoor antwoorden zijn toegestaan**.
+3. Gebruik **Ontwikkelaarshulpmiddelen → Acties → Parro: Antwoord versturen**, of een zelf ingerichte automatisering.
+
+De actie `parro.send_reply` heeft de velden `config_entry_id`, `chatroom_id` en `message`. Alleen beheerders en vertrouwde automatiseringen mogen deze actie aanroepen; leesrechten op de Parro-kaart geven geen schrijfrechten. Groepsgesprekken, gearchiveerde gesprekken en gesprekken waarin antwoorden door Parro is uitgeschakeld worden geweigerd. Er is nog geen antwoordveld in de Parro-kaart.
+
+Een antwoord bevat maximaal 1000 tekens en 20 regels. Er geldt minimaal één minuut tussen pogingen in hetzelfde gesprek, maximaal vijf pogingen per uur en twintig per dag per account. Hetzelfde antwoord wordt zes uur tegengehouden. De lokale pogingadministratie bevat tijdstippen, gespreks-ID’s en hashes, geen tekst; deze blijft na herstart gelden en wordt bij het verwijderen van de integratie gewist. Oude pogingen worden bij de volgende poging opgeruimd. De tekst kan wel in Home Assistant-automatiseringstraces of eigen logging terechtkomen.
+
+Er wordt nooit automatisch opnieuw verzonden na een onzekere uitkomst. **Controleer bij een fout eerst Parro zelf**: een timeout kan optreden nadat het bericht al ontvangen is. Het aanzetten van de optie verstuurt op zichzelf niets. Verstuur geen automatische antwoorden voordat je de betreffende automatisering zelf hebt gecontroleerd.
 
 ## Schoolagenda
 
@@ -52,7 +107,7 @@ Na installeren of bijwerken en herstarten verschijnt **Parro Schoolagenda** op h
 
 De integratie leest de iCal-abonnementen van het aangemelde account automatisch. Hele dagen, tijdzones, terugkerende afspraken, uitzonderingen en annuleringen worden verwerkt. De agenda is alleen-lezen en ververst ongeveer elke 30 minuten. Afspraken moeten door Parro in het agenda-abonnement worden aangeboden; berichten die een datum noemen worden niet automatisch afspraken. Een bestaand, los geïmporteerd Parro-abonnement blijft bestaan: selecteer één van beide agenda's om dubbele weergave te voorkomen.
 
-**Zichtbaarheid:** de agenda volgt de normale Home Assistant-rechten voor entiteiten. De aparte Parro-instellingen voor mededelingen en gesprekken beperken deze agenda niet. Titel, tijd, omschrijving en locatie van de eerstvolgende afspraak staan in agenda-attributen; de sensor Volgende schoolafspraak bevat ook tijd, titel en locatie. Deze gegevens kunnen daardoor in de Home Assistant-geschiedenis terechtkomen. Abonnementslinks en ruwe iCal-inhoud blijven alleen in het geheugen en worden niet als attributen of diagnostiek gedeeld. Schakel zowel de agenda-entiteit als de sensor Volgende schoolafspraak uit als je deze informatie niet in Home Assistant wilt hebben.
+**Zichtbaarheid:** de agenda volgt de normale Home Assistant-rechten voor entiteiten. De aparte Parro-instellingen voor mededelingen en gesprekken beperken deze agenda niet. Titel, tijd, omschrijving en locatie van de eerstvolgende afspraak staan in agenda-attributen; de sensor Volgende schoolafspraak bevat ook tijd, titel en locatie. In deze versie worden de inhoudelijke agenda-attributen en de titel/locatie van de volgende afspraak uitgesloten van nieuwe Recorder-opslag. Dat verwijdert geen bestaande geschiedenis en voorkomt geen opslag via eigen automatiseringen, meldingen of traces. Abonnementslinks en ruwe iCal-inhoud blijven alleen in het geheugen en worden niet als attributen of diagnostiek gedeeld. Schakel zowel de agenda-entiteit als de sensor Volgende schoolafspraak uit als je deze informatie niet in Home Assistant wilt hebben.
 
 Een agenda-aanvraag mag maximaal 366 dagen beslaan en 5.000 afspraken opleveren. Maximaal tien abonnementen worden samengevoegd; gelijke afspraken worden ontdubbeld. Onbereikbare of ongeldige agenda-inhoud geeft een fout of een niet-beschikbare agenda, zonder een gedeeltelijke of verouderde lijst als actueel te presenteren.
 
@@ -165,7 +220,7 @@ Voor eigen toepassingen zijn aangemelde HTTP-lezingen beschikbaar met dezelfde t
 
 Gebruik `GET` met de gebruikelijke Home Assistant-authenticatie; zet geen toegangstoken in de URL of in dashboard-YAML. De weergave gebruikt de overeenkomstige Home Assistant-WebSocketverbinding.
 
-Periodieke statussynchronisatie leest geen chatinhoud. Deze versie biedt geen verzenden, markeren als gelezen, absenties, inschrijven, volledige archiefexport of AI-aansluiting. Eventuele effecten van leesaanroepen op de leesstatus aan de serverkant zijn nog niet volledig live beproefd.
+Zonder de nieuwe opties leest periodieke statussynchronisatie geen chatinhoud. Met gebeurtenissen of foto-entiteiten leest de integratie begrensde lijsten; zij opent daarvoor geen afzonderlijke gesprekken of berichten. Antwoorden is alleen beschikbaar met de expliciete optie en gesprekslijst. Er is geen actie voor markeren als gelezen, absenties, inschrijven, volledige archiefexport of AI-aansluiting. Eventuele effecten van leesaanroepen op de leesstatus aan de serverkant zijn nog niet volledig live beproefd.
 
 ## Problemen oplossen
 
@@ -201,6 +256,14 @@ De installatie-ZIP bevat de integratie inclusief kaart, openbare documentatie en
 
 Voor een nieuwe lokale publicatiemap kun je `scripts/prepare_repository.py` gebruiken met `--output`, `--owner`, `--repo` en `--codeowner`. De helper controleert de lokale structuur en publicatiemetadata, waaronder niet ingevulde waarden. Hij installeert of publiceert niets en neemt geen contact op met GitHub of Parro.
 
-## Licentie
+## Onafhankelijk project en beperkingen
 
-De eigen integratie en kaart vallen onder de [MIT-licentie](LICENSE). De apart geïnstalleerde afhankelijkheid [`parro` 1.1.0](https://github.com/anneschuth/parro-cli/releases/tag/v1.1.0) behoudt haar eigen licentie en auteursrecht. Dit project is onofficieel en wordt niet door Parro, ParnasSys of Home Assistant ondersteund.
+Dit is een onafhankelijk communityproject, niet gemaakt, goedgekeurd of ondersteund door Parro, ParnasSys of Topicus. Ook opname in de Marketplace/HACS betekent geen goedkeuring door deze partijen. Merknamen en het Parro-logo blijven eigendom van hun respectieve rechthebbenden; gebruik in dit project dient ter herkenning van de gekoppelde dienst.
+
+De integratie gebruikt onofficiële koppelingen. Wijzigingen bij Parro kunnen functies onderbreken of opnieuw aanmelden noodzakelijk maken. Er is geen garantie op volledigheid, beschikbaarheid of aflevering van meldingen en antwoorden. Houd de officiële Parro-app beschikbaar voor belangrijke schoolcommunicatie. De integratie geeft geen extra rechten op schoolinformatie of foto’s en omzeilt geen accountbeperkingen.
+
+Publiceer geen schoolberichten, kindgegevens, foto’s, tokens of volledige logs in issues. Verwijder zulke gegevens ook uit screenshots. De integratie verstuurt geen telemetrie naar de ontwikkelaars. Home Assistant-back-ups kunnen lokale accounttokens, namen en eigen automatiseringsgegevens bevatten: behandel die als privé.
+
+## Licentie en dank
+
+De eigen integratie en kaart vallen onder de [MIT-licentie](LICENSE), zonder garantie zoals in die licentie beschreven. De gegevensmodellen voor kinderen, groepen en agenda-items zijn aangepast uit [Parro-HA van Paulus1337](https://github.com/Paulus1337/Parro-HA). Zijn auteursrecht en MIT-licentie zijn opgenomen in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). De licentie op de code verleent geen rechten op Parro-merken, berichten of foto’s. De apart geïnstalleerde afhankelijkheid [`parro` 1.1.0](https://github.com/anneschuth/parro-cli/releases/tag/v1.1.0) behoudt haar eigen licentie en auteursrecht. Dit project is onofficieel en wordt niet door Parro, ParnasSys of Home Assistant ondersteund.

@@ -31,6 +31,19 @@ def _limit(value: Any) -> int:
 @callback
 def async_register_services(hass: HomeAssistant) -> None:
     """Register response-only actions even before an account has been loaded."""
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        "send_reply",
+        partial(_async_reply, hass),
+        schema=vol.Schema(
+            {
+                vol.Required("config_entry_id"): cv.string,
+                vol.Required("chatroom_id"): cv.string,
+                vol.Required("message"): cv.string,
+            }
+        ),
+    )
     for name in SERVICES:
         schema = {
             vol.Required("config_entry_id"): cv.string,
@@ -91,3 +104,12 @@ async def _async_read(hass: HomeAssistant, name: str, call: ServiceCall) -> dict
     # even if a server ignores its page-size parameter.
     items = items[:limit]
     return {"items": items, "returned": len(items), "limit": limit}
+
+
+async def _async_reply(hass, call):
+    entry = hass.config_entries.async_get_entry(call.data["config_entry_id"])
+    if entry is None or entry.domain != DOMAIN or entry.state is not ConfigEntryState.LOADED:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="account_not_loaded"
+        )
+    await entry.runtime_data.replies.async_send(call.data["chatroom_id"], call.data["message"])

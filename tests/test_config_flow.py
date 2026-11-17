@@ -255,3 +255,34 @@ async def test_chat_viewers_revalidated_on_submit(hass, config_entry, hass_read_
     )
     assert result["errors"] == {"chat_viewers": "invalid_viewers"}
     assert not config_entry.options
+
+
+async def test_new_features_default_off_and_can_be_enabled(hass, config_entry):
+    config_entry.add_to_hass(hass)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    defaults = result["data_schema"]({"poll_interval": 30})
+    for key in ("child_entities", "photo_entities", "activity_events", "allow_replies"):
+        assert defaults[key] is False
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "poll_interval": 30,
+            "child_entities": True,
+            "photo_entities": True,
+            "activity_events": True,
+            "allow_replies": True,
+            "reply_rooms": ["42"],
+        },
+    )
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert config_entry.options["reply_rooms"] == ["42"]
+
+
+@pytest.mark.parametrize("rooms", [["../room"], ["0"], ["1"] * 51])
+async def test_reply_room_options_validate_ids(hass, config_entry, rooms):
+    config_entry.add_to_hass(hass)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"poll_interval": 30, "allow_replies": True, "reply_rooms": rooms}
+    )
+    assert result["errors"] == {"reply_rooms": "invalid_rooms"}

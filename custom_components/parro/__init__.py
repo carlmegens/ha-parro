@@ -1,4 +1,4 @@
-"""Unofficial, read-only Parro integration."""
+"""Unofficial Parro integration."""
 
 from datetime import timedelta
 from typing import Any
@@ -18,7 +18,13 @@ from .services import async_register_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.CALENDAR]
+PLATFORMS = [
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+    Platform.CALENDAR,
+    Platform.IMAGE,
+    Platform.EVENT,
+]
 type ParroConfigEntry = ConfigEntry[ParroCoordinator]
 
 
@@ -40,6 +46,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ParroConfigEntry) -> boo
     try:
         await coordinator.async_config_entry_first_refresh()
         entry.runtime_data = coordinator
+        from .const import CONF_CHILD_ENTITIES
+
+        if entry.options.get(CONF_CHILD_ENTITIES):
+            from homeassistant.helpers import device_registry as dr
+
+            dr.async_get(hass).async_get_or_create(
+                config_entry_id=entry.entry_id,
+                identifiers={(DOMAIN, entry.entry_id)},
+                name="Parro",
+                manufacturer="Parro",
+                model="School account",
+                entry_type=dr.DeviceEntryType.SERVICE,
+                configuration_url=f"homeassistant://parro/{entry.entry_id}",
+            )
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     except BaseException:
         await coordinator.async_shutdown()
@@ -58,6 +78,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ParroConfigEntry) -> boo
 async def _async_options_updated(hass: HomeAssistant, entry: ParroConfigEntry) -> None:
     """Apply changed polling options; persisting tokens must never reload the entry."""
     coordinator = entry.runtime_data
+    from .const import FEATURE_OPTIONS
+
+    features = tuple(entry.options.get(key, False) for key in FEATURE_OPTIONS)
+    if features != coordinator.feature_options:
+        await hass.config_entries.async_reload(entry.entry_id)
+        return
     interval = timedelta(minutes=entry.options.get(CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL))
     if interval != coordinator.update_interval:
         coordinator.update_interval = interval
@@ -69,3 +95,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ParroConfigEntry) -> bo
         await entry.runtime_data.async_shutdown()
         await entry.runtime_data.api.async_close()
     return unloaded
+
+
+async def async_remove_entry(hass, entry):
+    """Remove the local reply-attempt ledger when deleting an account."""
+    from homeassistant.helpers.storage import Store
+
+    await Store(hass, 1, f"{DOMAIN}.{entry.entry_id}.replies", private=True).async_remove()
