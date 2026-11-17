@@ -8,7 +8,7 @@ Schoolmededelingen, gesprekken, beschikbare foto's en schoolafspraken openen van
 
 **Beschikbaar in de standaardcatalogus van Marketplace en HACS.** Zoek op **Parro** of gebruik de installatieknop hierboven; een aangepaste repository toevoegen is niet nodig. De [catalogusaanvraag is op 16 november 2026 goedgekeurd en samengevoegd](https://github.com/hacs/default/pull/13845). Dit is een onofficiële community-integratie voor Parro.
 
-**Versie 1.0.0 is de eerste stabiele release.** Mededelingen, gesprekken, foto’s en de schoolagenda zijn beschikbaar vanuit het Parro-apparaat en het meegeleverde Parro-scherm. Schoolafspraken werken ook in de gewone Home Assistant-agenda, op eigen dashboards en in automatiseringen.
+**Versie 1.1.0 is de nieuwste stabiele release.** Mededelingen, gesprekken, foto’s en de schoolagenda zijn beschikbaar vanuit het Parro-apparaat en het meegeleverde Parro-scherm. Schoolafspraken werken ook in de gewone Home Assistant-agenda, op eigen dashboards en in automatiseringen.
 
 ## Installeren via Marketplace of HACS
 
@@ -26,7 +26,7 @@ Heb je Parro al via een aangepaste repository geïnstalleerd? Je hoeft niets opn
 
 ## Versies en compatibiliteit
 
-Versie **1.0.0** bouwt voort op de functionaliteit van 0.4.3. Bijwerken vereist geen nieuwe aanmelding, gewijzigde kaartconfiguratie of migratie van entiteiten. Installeer de update via Marketplace of HACS en herstart Home Assistant.
+Versie **1.1.0** voegt optionele kind-entiteiten, foto-entiteiten, meldingsgebeurtenissen en antwoorden op gesprekken toe aan 1.0.0. Bijwerken vereist geen nieuwe aanmelding, gewijzigde kaartconfiguratie of migratie van entiteiten. Installeer de update via Marketplace of HACS en herstart Home Assistant.
 
 Binnen **1.x** behouden we de bestaande entiteit-identiteiten en de gedocumenteerde acties, API-antwoorden en kaartinstellingen. Foutcorrecties krijgen een patchversie (bijvoorbeeld 1.0.1); compatibele uitbreidingen een minorversie (bijvoorbeeld 1.1.0). Incompatibele wijzigingen aan deze interfaces krijgen een nieuwe hoofdversie en migratie-instructies. De minimale Home Assistant-versie staat per release in `hacs.json`; wijzigingen daarin vermelden we in de releasenotities.
 
@@ -42,13 +42,13 @@ De twee bestaande tellers blijven gewone tellers. De pop-up haalt de inhoud afzo
 
 De apparaatpagina biedt ook een knop om de gekoppelde Parro-weergave te openen. Die opent het meegeleverde Parro-scherm binnen Home Assistant, zonder een apart dashboard aan te maken. De normale **Configureren**-opties blijven beschikbaar. Een browserherlaadactie na installeren of bijwerken zorgt dat de nieuwe pop-upcode is geladen.
 
-## Testversie 1.1.0b2: optionele functies per gezin
+## Optionele functies per gezin (vanaf 1.1.0)
 
-**Deze functies zitten in de testrelease 1.1.0b2, nog niet in de stabiele 1.0.0.** Open Parro in Marketplace/HACS, kies via het repositorymenu opnieuw downloaden en toon test-/bètaversies als die optie beschikbaar is. Selecteer expliciet `v1.1.0b2` en herstart Home Assistant. Gebruik anders de installatie-ZIP van de [testrelease](https://github.com/carlmegens/ha-parro/releases/tag/v1.1.0b2). Voor teruggaan kies je opnieuw 1.0.0. De nieuwe entiteiten worden dan niet meer aangeboden; eigen kaarten die ernaar verwijzen moet je zelf aanpassen.
+Deze functies zijn beschikbaar in de [stabiele release 1.1.0](https://github.com/carlmegens/ha-parro/releases/tag/v1.1.0). Werk bij via Marketplace/HACS en herstart Home Assistant. Ook vanuit 1.1.0b1 of 1.1.0b2 kun je direct bijwerken; bestaande instellingen blijven behouden. Een testversie selecteren is niet meer nodig.
 
 De uitbreiding is met verzonnen gegevens getest. De kindkoppelingen, profielfoto’s en daadwerkelijke aflevering van antwoorden zijn nog niet met een echt schoolaccount bevestigd. Er zijn tijdens de ontwikkeling geen berichten naar leerkrachten verzonden. Test antwoorden alleen met een bewust gekozen bericht; gebruik de officiële Parro-app om aflevering te controleren.
 
-Ga naar **Instellingen → Apparaten en diensten → Parro → Configureren**. De nieuwe opties staan standaard uit, ook na bijwerken. Je bestaande tellers, agenda, kaarten en toegangsinstellingen blijven werken.
+Ga naar **Instellingen → Apparaten en diensten → Parro → Configureren**. De nieuwe opties staan standaard uit. Eerder in een testversie ingeschakelde opties blijven behouden. Je bestaande tellers, agenda, kaarten en toegangsinstellingen blijven werken.
 
 | Optie | Wat beschikbaar komt |
 | --- | --- |
@@ -247,7 +247,7 @@ python3.14 -m venv .venv
 .venv/bin/python -m pip install -r requirements-test.txt
 .venv/bin/python -m pytest -q
 .venv/bin/python scripts/prepare_repository.py --check
-.venv/bin/python scripts/prepare_repository.py --local-archive dist/parro-1.0.0-local.zip
+.venv/bin/python scripts/prepare_repository.py --local-archive dist/parro-1.1.0-local.zip
 ```
 
 GitHub Actions voert HACS-validatie, Hassfest, Python-tests op Home Assistant 2026.8.3 en 2026.10.4 en browsertests uit. Alle controles moeten slagen voordat een release wordt gepubliceerd.

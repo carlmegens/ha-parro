@@ -1,5 +1,15 @@
 # Wijzigingen
 
+## 1.1.0 — 2026-11-17 (stabiel)
+
+- Maakt de functies uit 1.1.0b2 beschikbaar als stabiele update, zonder verdere functionele wijzigingen.
+- Optionele apparaten per kind met groepssensor, eigen schoolagenda en profielfoto; afspraken worden alleen met expliciete kindkoppelingen toegewezen.
+- Zes optionele afbeelding-entiteiten voor recente mededelingsfoto’s en gebeurtenissen voor nieuwe mededelingen en gespreksactiviteit.
+- Optionele antwoordactie voor beheerders en automatiseringen, met toegestane gesprekken, verzendlimieten en zonder automatische herhaling bij een onzekere uitkomst.
+- Nieuw projecticoon en uitgebreide documentatie over toegang, beperkingen en bronvermelding. Agenda-tekstattributen worden uitgesloten van nieuwe Recorder-opslag.
+- Bestaande entiteiten, kaarten en instellingen blijven behouden. Nieuwe opties staan standaard uit; eerder ingeschakelde bèta-opties blijven behouden.
+- De automatische tests gebruiken verzonnen gegevens. Kindkoppelingen, profielfoto’s en daadwerkelijke aflevering van antwoorden zijn nog niet onafhankelijk met een echt schoolaccount bevestigd.
+
 ## 1.1.0b2 — 2026-11-17 (pre-release)
 
 - Uses the supplied project icon, exported from the Illustrator artwork at 256 and 512 pixels with transparency.
