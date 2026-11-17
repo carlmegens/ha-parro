@@ -1,5 +1,7 @@
 # Parro voor Home Assistant
 
+<img src="custom_components/parro/brand/icon@2x.png" alt="Parro-integratie" width="128" height="128">
+
 Schoolmededelingen, gesprekken, beschikbare foto's en schoolafspraken openen vanuit je Parro-apparaat in Home Assistant. Eén installatie via Marketplace of HACS levert de integratie en de bijbehorende weergave, met toegang per account en gebruiker.
 
 [![Open Parro in Marketplace of HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=carlmegens&repository=ha-parro&category=integration)
@@ -40,9 +42,9 @@ De twee bestaande tellers blijven gewone tellers. De pop-up haalt de inhoud afzo
 
 De apparaatpagina biedt ook een knop om de gekoppelde Parro-weergave te openen. Die opent het meegeleverde Parro-scherm binnen Home Assistant, zonder een apart dashboard aan te maken. De normale **Configureren**-opties blijven beschikbaar. Een browserherlaadactie na installeren of bijwerken zorgt dat de nieuwe pop-upcode is geladen.
 
-## Testversie 1.1.0b1: optionele functies per gezin
+## Testversie 1.1.0b2: optionele functies per gezin
 
-**Deze functies zitten in de testrelease 1.1.0b1, nog niet in de stabiele 1.0.0.** Open Parro in Marketplace/HACS, kies via het repositorymenu opnieuw downloaden en toon test-/bètaversies als die optie beschikbaar is. Selecteer expliciet `v1.1.0b1` en herstart Home Assistant. Gebruik anders de installatie-ZIP van de [testrelease](https://github.com/carlmegens/ha-parro/releases/tag/v1.1.0b1). Voor teruggaan kies je opnieuw 1.0.0. De nieuwe entiteiten worden dan niet meer aangeboden; eigen kaarten die ernaar verwijzen moet je zelf aanpassen.
+**Deze functies zitten in de testrelease 1.1.0b2, nog niet in de stabiele 1.0.0.** Open Parro in Marketplace/HACS, kies via het repositorymenu opnieuw downloaden en toon test-/bètaversies als die optie beschikbaar is. Selecteer expliciet `v1.1.0b2` en herstart Home Assistant. Gebruik anders de installatie-ZIP van de [testrelease](https://github.com/carlmegens/ha-parro/releases/tag/v1.1.0b2). Voor teruggaan kies je opnieuw 1.0.0. De nieuwe entiteiten worden dan niet meer aangeboden; eigen kaarten die ernaar verwijzen moet je zelf aanpassen.
 
 De uitbreiding is met verzonnen gegevens getest. De kindkoppelingen, profielfoto’s en daadwerkelijke aflevering van antwoorden zijn nog niet met een echt schoolaccount bevestigd. Er zijn tijdens de ontwikkeling geen berichten naar leerkrachten verzonden. Test antwoorden alleen met een bewust gekozen bericht; gebruik de officiële Parro-app om aflevering te controleren.
 
@@ -258,7 +260,7 @@ Voor een nieuwe lokale publicatiemap kun je `scripts/prepare_repository.py` gebr
 
 ## Onafhankelijk project en beperkingen
 
-Dit is een onafhankelijk communityproject, niet gemaakt, goedgekeurd of ondersteund door Parro, ParnasSys of Topicus. Ook opname in de Marketplace/HACS betekent geen goedkeuring door deze partijen. Merknamen en het Parro-logo blijven eigendom van hun respectieve rechthebbenden; gebruik in dit project dient ter herkenning van de gekoppelde dienst.
+Dit is een onafhankelijk communityproject, niet gemaakt, goedgekeurd of ondersteund door Parro, ParnasSys of Topicus. Ook opname in de Marketplace/HACS betekent geen goedkeuring door deze partijen. Het projecticoon is een bewerking van het Parro-beeldmerk. Merknamen en rechten op de onderliggende beeldmerken blijven bij hun respectieve rechthebbenden; het icoon duidt geen officiële samenwerking aan.
 
 De integratie gebruikt onofficiële koppelingen. Wijzigingen bij Parro kunnen functies onderbreken of opnieuw aanmelden noodzakelijk maken. Er is geen garantie op volledigheid, beschikbaarheid of aflevering van meldingen en antwoorden. Houd de officiële Parro-app beschikbaar voor belangrijke schoolcommunicatie. De integratie geeft geen extra rechten op schoolinformatie of foto’s en omzeilt geen accountbeperkingen.
 

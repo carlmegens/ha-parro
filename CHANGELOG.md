@@ -1,5 +1,11 @@
 # Wijzigingen
 
+## 1.1.0b2 — 2026-11-17 (pre-release)
+
+- Uses the supplied project icon, exported from the Illustrator artwork at 256 and 512 pixels with transparency.
+- Shows the project icon in the README and clarifies attribution for the modified brand illustration.
+- Branding-only update; functionality is unchanged from 1.1.0b1. Version 1.0.0 remains the stable release.
+
 ## 1.1.0b1 — 2026-11-17 (pre-release)
 
 This is an opt-in test release. New features have synthetic integration tests but have not yet been validated against a real school account. The stable release remains 1.0.0.

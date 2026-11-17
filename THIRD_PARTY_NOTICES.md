@@ -31,7 +31,9 @@ SOFTWARE.
 The separately installed `parro` library is by Anne Schuth:
 https://github.com/anneschuth/parro-cli . It retains its own license.
 
-Parro, ParnasSys and Topicus names and logos belong to their respective owners.
+The project icon is a modified illustration based on the Parro brand mark.
+Parro, ParnasSys and Topicus names and underlying brand marks belong to their
+respective owners; this illustration does not imply endorsement.
 The MIT license covers this project's code, not ownership of those marks,
 school messages or photographs.
 
