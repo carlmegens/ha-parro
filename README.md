@@ -1,22 +1,26 @@
 # Parro voor Home Assistant
 
-Schoolmededelingen, gesprekken en beschikbare foto's openen vanuit je Parro-apparaat in Home Assistant. Eén HACS-installatie levert de integratie en de bijbehorende weergave, met toegang per account en gebruiker.
+Schoolmededelingen, gesprekken, beschikbare foto's en schoolafspraken openen vanuit je Parro-apparaat in Home Assistant. Eén installatie via Marketplace of HACS levert de integratie en de bijbehorende weergave, met toegang per account en gebruiker.
 
-[![Open Parro in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=carlmegens&repository=ha-parro&category=integration)
+[![Open Parro in Marketplace of HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=carlmegens&repository=ha-parro&category=integration)
+
+**Beschikbaar in de standaardcatalogus van Marketplace en HACS.** Zoek op **Parro** of gebruik de installatieknop hierboven; een aangepaste repository toevoegen is niet nodig. De [catalogusaanvraag is op 16 november 2026 goedgekeurd en samengevoegd](https://github.com/hacs/default/pull/13845). Dit is een onofficiële community-integratie voor Parro.
 
 **Versie 0.4.3 voegt een tab Agenda toe aan het Parro-scherm, naast Mededelingen en Gesprekken.** Schoolafspraken verschijnen automatisch in de gewone Home Assistant-agenda en zijn bruikbaar op eigen dashboards en in automatiseringen.
 
 ## Installeren via Marketplace of HACS
 
-Vereist: Home Assistant Core **2026.8.3 of nieuwer**, Marketplace (vanaf Home Assistant 2026.11) of HACS en een Parro-/ParnasSys-account met de gewenste schoolinformatie. De knop hierboven opent deze repository in je eigen HACS-installatie.
+Vereist: Home Assistant Core **2026.8.3 of nieuwer**, Marketplace (vanaf Home Assistant 2026.11) of HACS en een Parro-/ParnasSys-account met de gewenste schoolinformatie. De knop hierboven opent Parro in de Marketplace of HACS van je eigen Home Assistant.
 
-1. Open **Parro** in HACS en download de integratie. Handmatig toevoegen kan via **Aangepaste repositories**, adres **https://github.com/carlmegens/ha-parro**, type **Integratie**.
+1. Open **Marketplace** of **HACS**, zoek op **Parro** en installeer de integratie van **carlmegens/ha-parro**. Kies de nieuwste stabiele release.
 2. Herstart Home Assistant.
 3. Ga naar **Instellingen → Apparaten en diensten → Integratie toevoegen**, zoek **Parro** en meld je aan.
 4. Kies de juiste identiteit wanneer het account meerdere ParnasSys-identiteiten aanbiedt.
 5. Herlaad de browserpagina en open het Parro-apparaat bij deze integratie.
 
-Installeer de nieuwste stabiele GitHub-release. Zolang de repository nog niet in de standaardcatalogus staat, voeg je hem als aangepaste repository toe. Zie de [Marketplace-catalogusuitleg](https://contributors.home-assistant.io/marketplace/guides/catalog/).
+**Parro nog niet zichtbaar?** Vernieuw de catalogus of gebruik de installatieknop hierboven om de repository rechtstreeks te openen.
+
+Heb je Parro al via een aangepaste repository geïnstalleerd? Je hoeft niets opnieuw te installeren: de bestaande installatie blijft updates ontvangen via Marketplace of HACS.
 
 ## Lezen vanuit het Parro-apparaat
 
