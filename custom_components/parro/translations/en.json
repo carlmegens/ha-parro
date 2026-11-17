@@ -114,14 +114,22 @@
     "event": {
       "new_announcement": {
         "name": "New announcement",
-        "event_types": {
-          "new_announcement": "New announcement"
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "new_announcement": "New announcement"
+            }
+          }
         }
       },
       "new_message": {
         "name": "New chat message",
-        "event_types": {
-          "new_message": "New chat message"
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "new_message": "New chat message"
+            }
+          }
         }
       }
     }

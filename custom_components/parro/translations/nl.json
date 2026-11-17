@@ -114,14 +114,22 @@
     "event": {
       "new_announcement": {
         "name": "Nieuwe mededeling",
-        "event_types": {
-          "new_announcement": "Nieuwe mededeling"
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "new_announcement": "Nieuwe mededeling"
+            }
+          }
         }
       },
       "new_message": {
         "name": "Nieuw chatbericht",
-        "event_types": {
-          "new_message": "Nieuw chatbericht"
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "new_message": "Nieuw chatbericht"
+            }
+          }
         }
       }
     }

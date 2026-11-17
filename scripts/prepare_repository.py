@@ -33,6 +33,7 @@ CORE_DATA = {"manifest.json", "strings.json", "services.yaml", "icons.json"}
 EXAMPLE_FILES = {"examples/dashboard.yaml", "examples/README.md"}
 FRONTEND_FILE = "frontend/parro-card.js"
 REQUIRED_FILES = {
+    "THIRD_PARTY_NOTICES.md",
     "README.md",
     "LICENSE",
     "hacs.json",
@@ -48,6 +49,11 @@ REQUIRED_FILES = {
             "coordinator.py",
             "dashboard.py",
             "entity.py",
+            "family.py",
+            "models.py",
+            "image.py",
+            "event.py",
+            "replies.py",
             "feed.py",
             "frontend.py",
             "sensor.py",
